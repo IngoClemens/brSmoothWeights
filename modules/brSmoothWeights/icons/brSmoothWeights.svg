@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 23.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="smooth_weights" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+	 y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#BCBCBC;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#5B5B5B;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#8E8E8E;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#8C8C8C;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+	.st4{fill-rule:evenodd;clip-rule:evenodd;fill:#D8D8D8;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+	.st5{fill-rule:evenodd;clip-rule:evenodd;fill:#AE9CDB;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+</style>
+<rect id="edge_5_" x="194" y="87" class="st0" width="32" height="276"/>
+<rect id="edge_4_" x="331" y="87" class="st0" width="32" height="276"/>
+<rect id="edge_3_" x="58" y="82" class="st0" width="32" height="276"/>
+<rect id="edge_2_" x="72.5" y="341.25" class="st0" width="276" height="32"/>
+<rect id="edge_1_" x="72.5" y="200.25" class="st0" width="276" height="32"/>
+<rect id="edge" x="70.5" y="59.25" class="st0" width="276" height="32"/>
+<rect id="vertex_3_" x="29.43" y="29.43" class="st1" width="90" height="90"/>
+<rect id="vertex_2_" x="29.43" y="171" class="st2" width="90" height="90"/>
+<rect id="vertex_1_" x="29.43" y="312.57" class="st1" width="90" height="90"/>
+<rect id="vertex_7_" x="165.7" y="29.43" class="st3" width="90" height="90"/>
+<rect id="vertex_6_" x="165.7" y="171" class="st4" width="90" height="90"/>
+<rect id="vertex_5_" x="165.7" y="312.57" class="st3" width="90" height="90"/>
+<rect id="vertex_11_" x="301.98" y="29.43" class="st1" width="90" height="90"/>
+<rect id="vertex_10_" x="301.98" y="171" class="st2" width="90" height="90"/>
+<rect id="vertex_9_" x="301.98" y="312.57" class="st1" width="90" height="90"/>
+<path id="brush_handle" class="st5" d="M476.01,113.29L476.01,113.29c-17.69-12.06-41.8-7.5-53.87,10.18L275,322.02
+	c-4.51,6.08-1.21,14.91,6.23,16.32c9.04,1.71,17.92,5.14,26.21,10.4c12.19,7.74,21.49,18.44,27.51,30.57
+	c3.57,7.19,13.73,7.54,17.99,0.74L486.2,167.16C498.25,149.47,493.69,125.35,476.01,113.29z"/>
+<path id="brush_tip" class="st5" d="M293.38,369.63c28.46,18.08,37.41,56.15,18.81,84.28c-40.71,61.58-175.34,32.31-168.93,26.16
+	c57.78-55.43,37.95-49.67,65.88-91.63C227.82,360.37,264.92,351.55,293.38,369.63z"/>
+</svg>

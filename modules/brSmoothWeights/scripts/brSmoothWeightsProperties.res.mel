@@ -1,0 +1,122 @@
+// ---------------------------------------------------------------------
+// brSmoothWeightsProperties.res.mel
+// ---------------------------------------------------------------------
+
+displayString -replace
+              -value "Smoothes only the selected vertices. When off only unselected vertices are affected."
+              m_brSmoothWeightsProperties.kAffectSelected;
+
+displayString -replace
+              -value "The color of the brush circle."
+              m_brSmoothWeightsProperties.kColor;
+
+displayString -replace
+              -value "No falloff"
+              m_brSmoothWeightsProperties.kCurveNone;
+
+displayString -replace
+              -value "Linear falloff"
+              m_brSmoothWeightsProperties.kCurveLinear;
+
+displayString -replace
+              -value "Smooth falloff"
+              m_brSmoothWeightsProperties.kCurveSmooth;
+
+displayString -replace
+              -value "Narrow falloff"
+              m_brSmoothWeightsProperties.kCurveNarrow;
+
+displayString -replace
+              -value "The number of overlapping surfaces considered for smoothing in surface mode."
+              m_brSmoothWeightsProperties.kDepth;
+
+displayString -replace
+              -value "The index of the first overlapping surface considered for smoothing in surface mode."
+              m_brSmoothWeightsProperties.kDepthStart;
+
+displayString -replace
+              -value "Displays the brush circle while smoothing."
+              m_brSmoothWeightsProperties.kDrawBrush;
+
+displayString -replace
+              -value "Displays the range circle while adjusting the brush size or strength."
+              m_brSmoothWeightsProperties.kDrawRange;
+
+displayString -replace
+              -value ("Applies the smoothing to the current selection with the strength value. " +
+                      "When only the mesh is selected the entire mesh will be considered.")
+              m_brSmoothWeightsProperties.kFlood;
+
+displayString -replace
+              -value ("Extends the smoothing or selection across a shell boundary by trying to " +
+                      "find an equivalent vertex on a neighbouring shell boundary in surface mode.")
+              m_brSmoothWeightsProperties.kKeepShellsTogether;
+
+displayString -replace
+              -value "The line with of the brush display."
+              m_brSmoothWeightsProperties.kLineWidth;
+
+displayString -replace
+              -value "The type of in-view message to display while the tool is active."
+              m_brSmoothWeightsProperties.kMessage;
+
+displayString -replace
+              -value ("The fraction of the brush size in which neighbouring vertices are " +
+                      "considered for smoothing for each vertex in volume mode.")
+              m_brSmoothWeightsProperties.kRange;
+
+displayString -replace
+              -value "The radius of the brush in which vertices are smoothed."
+              m_brSmoothWeightsProperties.kSize;
+
+displayString -replace
+              -value "The overall strength of the brush."
+              m_brSmoothWeightsProperties.kStrength;
+
+displayString -replace
+              -value ("The maximum distance to find an equivalent vertex on a neighbouring " +
+                      "shell boundary in surface mode.")
+              m_brSmoothWeightsProperties.kTolerance;
+
+displayString -replace
+              -value "Evaluates only every nth drag iteration. Higher values lead to a staggered evaluation."
+              m_brSmoothWeightsProperties.kUndersampling;
+
+displayString -replace
+              -value ("Enables the volume mode where weights are smoothed based on the vertex distance. " +
+                      "Since it's volume based the weights can also spread across shells and nearby surfaces. " +
+                      "When off the weights are smoothed based on the connected neighbours in surface mode.")
+              m_brSmoothWeightsProperties.kVolume;
+
+
+displayString -replace
+              -value "Display tool tips for all tool settings."
+              m_brSmoothWeightsProperties.kAnnotations;
+
+// ---------------------------------------------------------------------
+// MIT License
+//
+// Copyright (c) 2018 Ingo Clemens, brave rabbit
+// brSmoothWeights is under the terms of the MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Author: Ingo Clemens    www.braverabbit.com
+// ---------------------------------------------------------------------

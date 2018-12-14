@@ -1,0 +1,107 @@
+// ---------------------------------------------------------------------
+// brSmoothWeightsOptionValues.mel
+//
+// This script retrieves the values from the context when the tool
+// settings are initialized.
+//
+// ---------------------------------------------------------------------
+
+global proc brSmoothWeightsOptionValues( string $toolName )
+{
+    float $floatVals[];
+    float $floatVal;
+    int $intVal;
+
+    $intVal = eval("brSmoothWeightsContext -query -affectSelected " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brSmoothWeightsAffectSelectedCheck;
+
+    $floatVals[0] = eval("brSmoothWeightsContext -query -colorR " + $toolName);
+    $floatVals[1] = eval("brSmoothWeightsContext -query -colorG " + $toolName);
+    $floatVals[2] = eval("brSmoothWeightsContext -query -colorB " + $toolName);
+    colorSliderGrp -edit -rgbValue $floatVals[0] $floatVals[1] $floatVals[2] brSmoothWeightsBrushColorSlider;
+
+    $intVal = eval("brSmoothWeightsContext -query -curve " + $toolName);
+    brSmoothWeightsSetSymbolCheckBox $intVal;
+
+    $intVal = eval("brSmoothWeightsContext -query -depth " + $toolName);
+    intSliderGrp -edit -value $intVal brSmoothWeightsDepth;
+
+    $intVal = eval("brSmoothWeightsContext -query -depthStart " + $toolName);
+    intSliderGrp -edit -value $intVal brSmoothWeightsDepthStart;
+
+    $intVal = eval("brSmoothWeightsContext -query -drawBrush " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brSmoothWeightsDrawBrushCheck;
+
+    $intVal = eval("brSmoothWeightsContext -query -drawRange " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brSmoothWeightsDrawRangeCheck;
+
+    $intVal = eval("brSmoothWeightsContext -query -keepShellsTogether " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brSmoothWeightsKeepShellsTogetherCheck;
+
+    $intVal = eval("brSmoothWeightsContext -query -lineWidth " + $toolName);
+    intFieldGrp -edit -value1 $intVal brSmoothWeightsLineWidthField;
+
+    $intVal = eval("brSmoothWeightsContext -query -message " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brSmoothWeightsMessageType;
+
+    $floatVal = eval("brSmoothWeightsContext -query -range " + $toolName);
+    floatSliderGrp -edit -value $floatVal brSmoothWeightsRange;
+
+    $floatVal = eval("brSmoothWeightsContext -query -size " + $toolName);
+    floatSliderGrp -edit -value $floatVal brSmoothWeightsSize;
+
+    $floatVal = eval("brSmoothWeightsContext -query -strength " + $toolName);
+    floatSliderGrp -edit -value $floatVal brSmoothWeightsStrength;
+
+    $floatVal = eval("brSmoothWeightsContext -query -tolerance " + $toolName);
+    floatSliderGrp -edit -value $floatVal brSmoothWeightsTolerance;
+
+    $intVal = eval("brSmoothWeightsContext -query -undersampling " + $toolName);
+    intFieldGrp -edit -value1 $intVal brSmoothWeightsBrushUndersamplingField;
+
+    $intVal = eval("brSmoothWeightsContext -query -volume " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brSmoothWeightsVolumeCheck;
+
+    brSmoothWeightsVolumeToggle(eval("brSmoothWeightsContext -query -volume " + $toolName));
+}
+
+
+global proc brSmoothWeightsValues( string $toolName )
+{
+    string $icon = "brSmoothWeights.svg";
+    string $help = "";
+    toolPropertySetCommon $toolName $icon $help;
+
+    frameLayout -edit -enable 1 -collapse 0 brSmoothWeightsFrame;
+    brSmoothWeightsOptionValues $toolName;
+
+    toolPropertySelect brSmoothWeights;
+}
+
+// ---------------------------------------------------------------------
+// MIT License
+//
+// Copyright (c) 2018 Ingo Clemens, brave rabbit
+// brSmoothWeights is under the terms of the MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Author: Ingo Clemens    www.braverabbit.com
+// ---------------------------------------------------------------------

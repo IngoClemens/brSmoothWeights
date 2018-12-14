@@ -1,0 +1,489 @@
+// ---------------------------------------------------------------------
+// brSmoothWeightsProperties.mel
+//
+// This script defines the layout and callbacks for the tool settings
+// window.
+//
+// ---------------------------------------------------------------------
+
+global proc brSmoothWeightsSetSymbolCheckBox( int $button )
+{
+    string $items[] = `rowColumnLayout -query -childArray brSmoothWeightsCurveColumn`;
+    stringArrayRemoveAtIndex(0, $items);
+
+    for ($i = 0; $i < size($items); $i ++)
+    {
+        if ($button == $i)
+            symbolCheckBox -edit -value 1 $items[$i];
+        else
+            symbolCheckBox -edit -value 0 $items[$i];
+    }
+
+    brSmoothWeightsContext -edit -curve $button `currentCtx`;
+}
+
+
+global proc brSmoothWeightsSetBrushColor()
+{
+    float $color[] = `colorSliderGrp -query -rgbValue brSmoothWeightsBrushColorSlider`;
+    brSmoothWeightsContext -edit -colorR $color[0] -colorG $color[1] -colorB $color[2] `currentCtx`;
+}
+
+
+global proc brSmoothWeightsVolumeToggle( int $state )
+{
+    $state = !$state;
+
+    intSliderGrp -edit -enable $state brSmoothWeightsDepthStart;
+    intSliderGrp -edit -enable $state brSmoothWeightsDepth;
+    checkBoxGrp -edit -enable (1 - $state) brSmoothWeightsDrawRangeCheck;
+    checkBoxGrp -edit -enable $state brSmoothWeightsKeepShellsTogetherCheck;
+    floatSliderGrp -edit -enable $state brSmoothWeightsTolerance;
+}
+
+
+global proc brSmoothWeightsSetLayoutCollapseState( string $layout, int $state )
+{
+    optionVar -intValue ($layout + "State") $state;
+}
+
+
+global proc brSmoothWeightsReset()
+{
+    optionVar -remove "brSmoothWeightsContext1";
+
+    optionVar -remove "brSmoothWeightsSurfaceFrameState";
+    optionVar -remove "brSmoothWeightsVolumeFrameState";
+    optionVar -remove "brSmoothWeightsDisplayFrameState";
+    optionVar -remove "brSmoothWeightsAdvancedFrameState";
+    optionVar -remove "brSmoothWeightsHotkeyFrameState";
+
+    optionVar -remove "brSmoothWeightsEnableAdvanced";
+    optionVar -remove "brSmoothWeightsHideAnnotations";
+}
+
+
+proc addAnnotations()
+{
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kAffectSelected"))
+                brSmoothWeightsAffectSelectedCheck;
+    colorSliderGrp -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kColor"))
+                   brSmoothWeightsBrushColorSlider;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kCurveNone"))
+                   brSmoothWeightsNoneButton;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kCurveLinear"))
+                   brSmoothWeightsLinearButton;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kCurveSmooth"))
+                   brSmoothWeightsSmoothButton;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kCurveNarrow"))
+                   brSmoothWeightsNarrowButton;
+    intSliderGrp -edit
+                 -annotation (uiRes("m_brSmoothWeightsProperties.kDepth"))
+                 brSmoothWeightsDepth;
+    intSliderGrp -edit
+                 -annotation (uiRes("m_brSmoothWeightsProperties.kDepthStart"))
+                 brSmoothWeightsDepthStart;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kDrawBrush"))
+                brSmoothWeightsDrawBrushCheck;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kDrawRange"))
+                brSmoothWeightsDrawRangeCheck;
+    button -edit
+           -annotation (uiRes("m_brSmoothWeightsProperties.kFlood"))
+           brSmoothWeightsFloodButton;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kKeepShellsTogether"))
+                brSmoothWeightsKeepShellsTogetherCheck;
+    intFieldGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kLineWidth"))
+                brSmoothWeightsLineWidthField;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kMessage"))
+                brSmoothWeightsMessageType;
+    floatSliderGrp -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kRange"))
+                   brSmoothWeightsRange;
+    floatSliderGrp -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kSize"))
+                   brSmoothWeightsSize;
+    floatSliderGrp -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kStrength"))
+                   brSmoothWeightsStrength;
+    floatSliderGrp -edit
+                   -annotation (uiRes("m_brSmoothWeightsProperties.kTolerance"))
+                   brSmoothWeightsTolerance;
+    intFieldGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kUndersampling"))
+                brSmoothWeightsBrushUndersamplingField;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kVolume"))
+                brSmoothWeightsVolumeCheck;
+
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kAnnotations"))
+                brSmoothWeightsDisplayTipsCheck;
+}
+
+
+proc deleteAnnotations()
+{
+    checkBoxGrp -edit -annotation "" brSmoothWeightsAffectSelectedCheck;
+    colorSliderGrp -edit -annotation "" brSmoothWeightsBrushColorSlider;
+    symbolCheckBox -edit -annotation "" brSmoothWeightsNoneButton;
+    symbolCheckBox -edit -annotation "" brSmoothWeightsLinearButton;
+    symbolCheckBox -edit -annotation "" brSmoothWeightsSmoothButton;
+    symbolCheckBox -edit -annotation "" brSmoothWeightsNarrowButton;
+    intSliderGrp -edit -annotation "" brSmoothWeightsDepth;
+    intSliderGrp -edit -annotation "" brSmoothWeightsDepthStart;
+    checkBoxGrp -edit -annotation "" brSmoothWeightsDrawBrushCheck;
+    checkBoxGrp -edit -annotation "" brSmoothWeightsDrawRangeCheck;
+    button -edit -annotation "" brSmoothWeightsFloodButton;
+    checkBoxGrp -edit -annotation "" brSmoothWeightsKeepShellsTogetherCheck;
+    intFieldGrp -edit -annotation "" brSmoothWeightsLineWidthField;
+    checkBoxGrp -edit -annotation "" brSmoothWeightsMessageType;
+    floatSliderGrp -edit -annotation "" brSmoothWeightsRange;
+    floatSliderGrp -edit -annotation "" brSmoothWeightsSize;
+    floatSliderGrp -edit -annotation "" brSmoothWeightsStrength;
+    floatSliderGrp -edit -annotation "" brSmoothWeightsTolerance;
+    intFieldGrp -edit -annotation "" brSmoothWeightsBrushUndersamplingField;
+    checkBoxGrp -edit -annotation "" brSmoothWeightsVolumeCheck;
+
+    checkBoxGrp -edit -annotation "" brSmoothWeightsDisplayTipsCheck;
+}
+
+
+proc int annotationsState()
+{
+    if (`optionVar -exists "brSmoothWeightsHideAnnotations"`)
+        return `optionVar -query "brSmoothWeightsHideAnnotations"`;
+    return 1;
+}
+
+
+global proc brSmoothWeightsToggleAnnotations()
+{
+    if (annotationsState())
+        addAnnotations;
+    else
+        deleteAnnotations;
+}
+
+
+global proc brSmoothWeightsSetCallbacks( string $parent )
+{
+    checkBoxGrp -edit
+                -changeCommand "brSmoothWeightsContext -edit -affectSelected #1 `currentCtx`;"
+                brSmoothWeightsAffectSelectedCheck;
+    colorSliderGrp -edit
+                   -changeCommand "brSmoothWeightsSetBrushColor"
+                   brSmoothWeightsBrushColorSlider;
+    symbolCheckBox -edit
+                   -changeCommand "brSmoothWeightsSetSymbolCheckBox 0"
+                   brSmoothWeightsNoneButton;
+    symbolCheckBox -edit
+                   -changeCommand "brSmoothWeightsSetSymbolCheckBox 1"
+                   brSmoothWeightsLinearButton;
+    symbolCheckBox -edit
+                   -changeCommand "brSmoothWeightsSetSymbolCheckBox 2"
+                   brSmoothWeightsSmoothButton;
+    symbolCheckBox -edit
+                   -changeCommand "brSmoothWeightsSetSymbolCheckBox 3"
+                   brSmoothWeightsNarrowButton;
+    intSliderGrp -edit
+                 -changeCommand "brSmoothWeightsContext -edit -depth `intSliderGrp -query -value brSmoothWeightsDepth` `currentCtx`;"
+                 brSmoothWeightsDepth;
+    intSliderGrp -edit
+                 -changeCommand "brSmoothWeightsContext -edit -depthStart `intSliderGrp -query -value brSmoothWeightsDepthStart` `currentCtx`;"
+                 brSmoothWeightsDepthStart;
+    checkBoxGrp -edit
+                -changeCommand "brSmoothWeightsContext -edit -drawBrush #1 `currentCtx`;"
+                brSmoothWeightsDrawBrushCheck;
+    checkBoxGrp -edit
+                -changeCommand "brSmoothWeightsContext -edit -drawRange #1 `currentCtx`;"
+                brSmoothWeightsDrawRangeCheck;
+    button -edit
+           -command "brSmoothWeightsContext -edit -flood `floatSliderGrp -query -value brSmoothWeightsStrength` `currentCtx`;"
+           brSmoothWeightsFloodButton;
+    checkBoxGrp -edit
+                -changeCommand "brSmoothWeightsContext -edit -keepShellsTogether #1 `currentCtx`;"
+                brSmoothWeightsKeepShellsTogetherCheck;
+    intFieldGrp -edit
+                -changeCommand "brSmoothWeightsContext -edit -lineWidth #1 `currentCtx`;"
+                brSmoothWeightsLineWidthField;
+    checkBoxGrp -edit
+                -changeCommand "brSmoothWeightsContext -edit -message #1 `currentCtx`;"
+                brSmoothWeightsMessageType;
+    floatSliderGrp -edit
+                   -changeCommand "brSmoothWeightsContext -edit -range `floatSliderGrp -query -value brSmoothWeightsRange` `currentCtx`;"
+                   brSmoothWeightsRange;
+    floatSliderGrp -edit
+                   -changeCommand "brSmoothWeightsContext -edit -size `floatSliderGrp -query -value brSmoothWeightsSize` `currentCtx`;"
+                   brSmoothWeightsSize;
+    floatSliderGrp -edit
+                   -changeCommand "brSmoothWeightsContext -edit -strength `floatSliderGrp -query -value brSmoothWeightsStrength` `currentCtx`;"
+                   brSmoothWeightsStrength;
+    floatSliderGrp -edit
+                   -changeCommand "brSmoothWeightsContext -edit -tolerance `floatSliderGrp -query -value brSmoothWeightsTolerance` `currentCtx`;"
+                   brSmoothWeightsTolerance;
+    intFieldGrp -edit
+                -changeCommand "brSmoothWeightsContext -edit -undersampling #1 `currentCtx`;"
+                brSmoothWeightsBrushUndersamplingField;
+    checkBoxGrp -edit
+                -changeCommand "brSmoothWeightsVolumeToggle #1; brSmoothWeightsContext -edit -volume #1 `currentCtx`;"
+                brSmoothWeightsVolumeCheck;
+
+    frameLayout -edit
+                -collapseCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsSurfaceFrame\", 1)")
+                -expandCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsSurfaceFrame\", 0)")
+                brSmoothWeightsSurfaceFrame;
+    frameLayout -edit
+                -collapseCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsVolumeFrame\", 1)")
+                -expandCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsVolumeFrame\", 0)")
+                brSmoothWeightsVolumeFrame;
+    frameLayout -edit
+                -collapseCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsDisplayFrame\", 1)")
+                -expandCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsDisplayFrame\", 0)")
+                brSmoothWeightsDisplayFrame;
+    frameLayout -edit
+                -collapseCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsAdvancedFrame\", 1)")
+                -expandCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsAdvancedFrame\", 0)")
+                brSmoothWeightsAdvancedFrame;
+    frameLayout -edit
+                -collapseCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsHotkeyFrame\", 1)")
+                -expandCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsHotkeyFrame\", 0)")
+                brSmoothWeightsHotkeyFrame;
+
+    checkBoxGrp -edit
+                -changeCommand "optionVar -intValue \"brSmoothWeightsHideAnnotations\" #1; brSmoothWeightsToggleAnnotations;"
+                brSmoothWeightsDisplayTipsCheck;
+}
+
+
+global proc brSmoothWeightsProperties()
+{
+    setUITemplate -pushTemplate OptionsTemplate;
+
+    string $parent = `toolPropertyWindow -query -location`;
+    setParent $parent;
+
+    // The tool settings start with a column layout. It's important that
+    // the layout name matches the tool name.
+    columnLayout brSmoothWeights;
+
+        frameLayout -label "General Settings"
+                    -labelIndent 3
+                    -collapsable 1
+                    -collapse 0
+                    -marginWidth 5
+                    -marginHeight 5
+                    brSmoothWeightsFrame;
+
+            rowColumnLayout -numberOfColumns 5
+                            -columnWidth 1 135
+                            -columnOffset 1 "right" 8
+                            brSmoothWeightsCurveColumn;
+                text -label "Curve" -align "right";
+                symbolCheckBox  -height 38
+                                -onImage "brSmoothWeightsNone.png"
+                                -offImage "brSmoothWeightsNoneOff.png"
+                                -ann "No falloff"
+                                brSmoothWeightsNoneButton;
+                symbolCheckBox  -height 38
+                                -onImage "brSmoothWeightsLinear.png"
+                                -offImage "brSmoothWeightsLinearOff.png"
+                                -ann "Linear falloff"
+                                brSmoothWeightsLinearButton;
+                symbolCheckBox  -height 38
+                                -onImage "brSmoothWeightsSmooth.png"
+                                -offImage "brSmoothWeightsSmoothOff.png"
+                                -ann "Smooth falloff"
+                                brSmoothWeightsSmoothButton;
+                symbolCheckBox  -height 38
+                                -onImage "brSmoothWeightsNarrow.png"
+                                -offImage "brSmoothWeightsNarrowOff.png"
+                                -ann "Narrow falloff"
+                                brSmoothWeightsNarrowButton;
+            setParent ..;
+
+            floatSliderGrp -label "Size"
+                           -precision 3
+                           -maxValue 100
+                           brSmoothWeightsSize;
+            floatSliderGrp -label "Strength"
+                           -precision 3
+                           brSmoothWeightsStrength;
+            checkBoxGrp -label "Affect Selected" brSmoothWeightsAffectSelectedCheck;
+
+            rowColumnLayout -numberOfColumns 3
+                            -columnWidth 1 135
+                            -columnWidth 2 180
+                            -columnWidth 3 30;
+                columnLayout; setParent .. ;
+                button -label "Flood" brSmoothWeightsFloodButton;
+                columnLayout; setParent ..;
+            setParent .. ;
+
+            frameLayout -label "Surface Smoothing"
+                        -labelIndent 3
+                        -collapsable 1
+                        -collapse (`optionVar -query "brSmoothWeightsSurfaceFrameState"`)
+                        -marginWidth 5
+                        -marginHeight 5
+                        brSmoothWeightsSurfaceFrame;
+
+                intSliderGrp -label "Depth Start"
+                             -minValue 1
+                             -maxValue 5
+                             brSmoothWeightsDepthStart;
+                intSliderGrp -label "Depth"
+                             -minValue 1
+                             -maxValue 5
+                             brSmoothWeightsDepth;
+                checkBoxGrp -label "Keep Shells Together" brSmoothWeightsKeepShellsTogetherCheck;
+                floatSliderGrp -label "Tolerance"
+                               -precision 3
+                               -maxValue 1
+                               brSmoothWeightsTolerance;
+
+            setParent .. ;
+
+            frameLayout -label "Volume Smoothing"
+                        -labelIndent 3
+                        -collapsable 1
+                        -collapse (`optionVar -query "brSmoothWeightsVolumeFrameState"`)
+                        -marginWidth 5
+                        -marginHeight 5
+                        brSmoothWeightsVolumeFrame;
+
+                checkBoxGrp -label "Volume" brSmoothWeightsVolumeCheck;
+                floatSliderGrp -label "Range"
+                               -precision 3
+                               -maxValue 1
+                               brSmoothWeightsRange;
+
+            setParent ..;
+
+        setParent ..;
+
+        frameLayout -label "Display Options"
+                    -labelIndent 3
+                    -collapsable 1
+                    -collapse (`optionVar -query "brSmoothWeightsDisplayFrameState"`)
+                    -marginWidth 5
+                    -marginHeight 5
+                    brSmoothWeightsDisplayFrame;
+
+            checkBoxGrp -label "Draw Brush" brSmoothWeightsDrawBrushCheck;
+            checkBoxGrp -label "Draw Range" brSmoothWeightsDrawRangeCheck;
+            colorSliderGrp -label "Brush Color" brSmoothWeightsBrushColorSlider;
+            intFieldGrp -label "Line Width" brSmoothWeightsLineWidthField;
+
+            separator -style "none";
+
+            checkBoxGrp -label "In-View Message" brSmoothWeightsMessageType;
+            checkBoxGrp -label "Tool Tips"
+                        -value1 `annotationsState`
+                        brSmoothWeightsDisplayTipsCheck;
+
+        setParent ..;
+
+        frameLayout -label "Advanced"
+                    -labelIndent 3
+                    -collapsable 1
+                    -collapse (`optionVar -query "brSmoothWeightsAdvancedFrameState"`)
+                    -marginWidth 5
+                    -marginHeight 5
+                    -manage (`optionVar -query brSmoothWeightsEnableAdvanced`)
+                    brSmoothWeightsAdvancedFrame;
+
+            intFieldGrp -label "Undersampling" brSmoothWeightsBrushUndersamplingField;
+
+        setParent ..;
+
+        frameLayout -label "Hotkeys"
+                    -labelIndent 3
+                    -collapsable 1
+                    -collapse (`optionVar -query "brSmoothWeightsHotkeyFrameState"`)
+                    -marginWidth 5
+                    -marginHeight 5
+                    brSmoothWeightsHotkeyFrame;
+
+            rowColumnLayout -numberOfColumns 2
+                            -columnWidth 1 130
+                            -columnWidth 2 260
+                            -columnSpacing 2 10;
+
+                text -align "right" -font boldLabelFont -label "LMB:";
+                text -align "left" -label "Drag to smooth" -wordWrap true;
+
+                // For some reason the separation is off between the
+                // first and second row. Using the blank text as an
+                // invisible separator.
+                text -label "" -height 7;
+                text -label "" -height 7;
+
+                text -align "right" -font boldLabelFont -label "MMB:";
+                text -align "left" -label "Drag left/right to adjust brush size" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "MMB:";
+                text -align "left" -label "Drag up/down to adjust brush strength" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "Ctrl + MMB:";
+                text -align "left" -label "Fine control for adjusting size and strength" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "Shift + LMB:";
+                text -align "left" -label "Drag to select vertices" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "Ctrl + LMB:";
+                text -align "left" -label "Drag to deselect vertices" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "Shift + Ctrl + LMB:";
+                text -align "left" -label "Click to clear vertex selection" -wordWrap true;
+
+            setParent ..;
+
+        setParent ..;
+
+    setParent ..;
+
+    setUITemplate -popTemplate;
+
+    brSmoothWeightsSetCallbacks $parent;
+
+    brSmoothWeightsToggleAnnotations;
+}
+
+// ---------------------------------------------------------------------
+// MIT License
+//
+// Copyright (c) 2018 Ingo Clemens, brave rabbit
+// brSmoothWeights is under the terms of the MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Author: Ingo Clemens    www.braverabbit.com
+// ---------------------------------------------------------------------
