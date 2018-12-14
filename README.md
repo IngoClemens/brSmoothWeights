@@ -8,6 +8,8 @@ By default brSmoothWeights smoothes across shell boundaries to maintain the inte
 In addition the new volume-based smoothing allows to smooth across several discontinuous shells whereas the default smoothing is surface based. Volume smoothing should be handled with care as it can easily introduce weights in areas which shouldn't be affected.
 The brush display is customizable as well as the help information.
 
+Feature overview on Vimeo: [brSmoothWeights(https://vimeo.com/304704799)
+
 **brSmoothWeights is under the terms of the MIT License**
 
 ## Installation
