@@ -48,6 +48,11 @@ displayString -replace
               m_brSmoothWeightsProperties.kFlood;
 
 displayString -replace
+              -value ("When smoothing with oversampling the strength value is divided by the number " +
+                      "of samples.")
+              m_brSmoothWeightsProperties.kFractionOversampling;
+
+displayString -replace
               -value ("Extends the smoothing or selection across a shell boundary by trying to " +
                       "find an equivalent vertex on a neighbouring shell boundary in surface mode.")
               m_brSmoothWeightsProperties.kKeepShellsTogether;
@@ -59,6 +64,10 @@ displayString -replace
 displayString -replace
               -value "The type of in-view message to display while the tool is active."
               m_brSmoothWeightsProperties.kMessage;
+
+displayString -replace
+              -value "The number of iterations for the smoothing."
+              m_brSmoothWeightsProperties.kOversampling;
 
 displayString -replace
               -value ("The fraction of the brush size in which neighbouring vertices are " +

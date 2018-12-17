@@ -99,6 +99,9 @@ proc addAnnotations()
            -annotation (uiRes("m_brSmoothWeightsProperties.kFlood"))
            brSmoothWeightsFloodButton;
     checkBoxGrp -edit
+                -annotation (uiRes("m_brSmoothWeightsProperties.kFractionOversampling"))
+                brSmoothWeightsFractionOversamplingCheck;
+    checkBoxGrp -edit
                 -annotation (uiRes("m_brSmoothWeightsProperties.kKeepShellsTogether"))
                 brSmoothWeightsKeepShellsTogetherCheck;
     intFieldGrp -edit
@@ -107,6 +110,9 @@ proc addAnnotations()
     checkBoxGrp -edit
                 -annotation (uiRes("m_brSmoothWeightsProperties.kMessage"))
                 brSmoothWeightsMessageType;
+    intSliderGrp -edit
+                 -annotation (uiRes("m_brSmoothWeightsProperties.kOversampling"))
+                 brSmoothWeightsOversampling;
     floatSliderGrp -edit
                    -annotation (uiRes("m_brSmoothWeightsProperties.kRange"))
                    brSmoothWeightsRange;
@@ -145,9 +151,11 @@ proc deleteAnnotations()
     checkBoxGrp -edit -annotation "" brSmoothWeightsDrawBrushCheck;
     checkBoxGrp -edit -annotation "" brSmoothWeightsDrawRangeCheck;
     button -edit -annotation "" brSmoothWeightsFloodButton;
+    checkBoxGrp -edit -annotation "" brSmoothWeightsFractionOversamplingCheck;
     checkBoxGrp -edit -annotation "" brSmoothWeightsKeepShellsTogetherCheck;
     intFieldGrp -edit -annotation "" brSmoothWeightsLineWidthField;
     checkBoxGrp -edit -annotation "" brSmoothWeightsMessageType;
+    intSliderGrp -edit -annotation "" brSmoothWeightsOversampling;
     floatSliderGrp -edit -annotation "" brSmoothWeightsRange;
     floatSliderGrp -edit -annotation "" brSmoothWeightsSize;
     floatSliderGrp -edit -annotation "" brSmoothWeightsStrength;
@@ -212,6 +220,9 @@ global proc brSmoothWeightsSetCallbacks( string $parent )
            -command "brSmoothWeightsContext -edit -flood `floatSliderGrp -query -value brSmoothWeightsStrength` `currentCtx`;"
            brSmoothWeightsFloodButton;
     checkBoxGrp -edit
+                -changeCommand "brSmoothWeightsContext -edit -fractionOversampling #1 `currentCtx`;"
+                brSmoothWeightsFractionOversamplingCheck;
+    checkBoxGrp -edit
                 -changeCommand "brSmoothWeightsContext -edit -keepShellsTogether #1 `currentCtx`;"
                 brSmoothWeightsKeepShellsTogetherCheck;
     intFieldGrp -edit
@@ -220,6 +231,9 @@ global proc brSmoothWeightsSetCallbacks( string $parent )
     checkBoxGrp -edit
                 -changeCommand "brSmoothWeightsContext -edit -message #1 `currentCtx`;"
                 brSmoothWeightsMessageType;
+    intSliderGrp -edit
+                 -changeCommand "brSmoothWeightsContext -edit -oversampling `intSliderGrp -query -value brSmoothWeightsOversampling` `currentCtx`;"
+                 brSmoothWeightsOversampling;
     floatSliderGrp -edit
                    -changeCommand "brSmoothWeightsContext -edit -range `floatSliderGrp -query -value brSmoothWeightsRange` `currentCtx`;"
                    brSmoothWeightsRange;
@@ -320,6 +334,16 @@ global proc brSmoothWeightsProperties()
                            -precision 3
                            brSmoothWeightsStrength;
             checkBoxGrp -label "Affect Selected" brSmoothWeightsAffectSelectedCheck;
+
+            separator -style "none";
+
+            intSliderGrp -label "Oversampling"
+                         -minValue 1
+                         -maxValue 10
+                         brSmoothWeightsOversampling;
+            checkBoxGrp -label "Fraction Oversampling" brSmoothWeightsFractionOversamplingCheck;
+
+            separator -style "none";
 
             rowColumnLayout -numberOfColumns 3
                             -columnWidth 1 135

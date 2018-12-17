@@ -78,9 +78,11 @@ public:
     void setDrawRange(bool value);
     void setEnterToolCommand(MString value);
     void setExitToolCommand(MString value);
+    void setFractionOversampling(bool value);
     void setKeepShellsTogether(bool value);
     void setLineWidth(int value);
     void setMessage(int value);
+    void setOversampling(int value);
     void setRange(double value);
     void setSize(double value);
     void setStrength(double value);
@@ -109,9 +111,11 @@ private:
     bool drawRangeVal;
     MString enterToolCommandVal;
     MString exitToolCommandVal;
+    bool fractionOversamplingVal;
     bool keepShellsTogetherVal;
     int lineWidthVal;
     int messageVal;
+    int oversamplingVal;
     double rangeVal;
     double sizeVal;
     double strengthVal;
@@ -183,6 +187,7 @@ public:
 
     // smooth computation
     MStatus performSmooth(MEvent event, MIntArray indices, MFloatArray distances);
+    void setCurrentWeight(double value, unsigned int index, bool flood);
     void computeWeights(unsigned int index,
                         double falloff,
                         int oppositeIndex,
@@ -237,9 +242,11 @@ public:
     void setEnterToolCommand(MString value);
     void setExitToolCommand(MString value);
     void setFlood(double value);
+    void setFractionOversampling(bool value);
     void setKeepShellsTogether(bool value);
     void setLineWidth(int value);
     void setMessage(int value);
+    void setOversampling(int value);
     void setRange(double value);
     void setSize(double value);
     void setStrength(double value);
@@ -259,9 +266,11 @@ public:
     bool getDrawRange();
     MString getEnterToolCommand();
     MString getExitToolCommand();
+    bool getFractionOversampling();
     bool getKeepShellsTogether();
     int getLineWidth();
     int getMessage();
+    int getOversampling();
     double getRange();
     double getSize();
     double getStrength();
@@ -286,9 +295,11 @@ private:
     bool drawRangeVal;
     MString enterToolCommandVal;
     MString exitToolCommandVal;
+    bool fractionOversamplingVal;
     bool keepShellsTogetherVal;
     int lineWidthVal;
     int messageVal;
+    int oversamplingVal;
     double rangeVal;
     double sizeVal;
     double strengthVal;

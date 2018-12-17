@@ -71,6 +71,12 @@ The strength of the smoothing effect. A value of 1 defines a full averaging with
 **Affect Selected**
 Smoothes only the selected vertices. When off only unselected vertices are affected.
 
+**Oversampling**
+The number of iterations for the smoothing.
+
+**Fraction Oversampling**
+When smoothing with oversampling the strength value is divided by the number of samples.
+
 **Flood**
 Applies the smoothing to the current selection with the strength value. When only the mesh is selected the entire mesh will be considered.
 
@@ -102,10 +108,15 @@ Sets the brush circle color.
 Sets the line width of the brush circle.
 
 
-### Latest version: 1.0.0 (2018-12-14)
+### Latest version: 1.0.1 (2018-12-17)
 
 
 ## Changelog:
+
+**1.0.1 (2018-12-17)**
+
+    - Added an oversampling option to allow for smoother results in paint and flood mode.
+    - Added the fraction oversampling option which only uses a fraction of the strength per oversampling iteration. It divides the strength value by the number of oversampling steps. This can make the smoothing effect don't appear as harsh when working with higher strength values.
 
 **1.0.0 (2018-12-14)**
 

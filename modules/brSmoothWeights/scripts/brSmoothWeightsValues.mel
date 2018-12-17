@@ -35,6 +35,9 @@ global proc brSmoothWeightsOptionValues( string $toolName )
     $intVal = eval("brSmoothWeightsContext -query -drawRange " + $toolName);
     checkBoxGrp -edit -value1 $intVal brSmoothWeightsDrawRangeCheck;
 
+    $intVal = eval("brSmoothWeightsContext -query -fractionOversampling " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brSmoothWeightsFractionOversamplingCheck;
+
     $intVal = eval("brSmoothWeightsContext -query -keepShellsTogether " + $toolName);
     checkBoxGrp -edit -value1 $intVal brSmoothWeightsKeepShellsTogetherCheck;
 
@@ -43,6 +46,9 @@ global proc brSmoothWeightsOptionValues( string $toolName )
 
     $intVal = eval("brSmoothWeightsContext -query -message " + $toolName);
     checkBoxGrp -edit -value1 $intVal brSmoothWeightsMessageType;
+
+    $intVal = eval("brSmoothWeightsContext -query -oversampling " + $toolName);
+    intSliderGrp -edit -value $intVal brSmoothWeightsOversampling;
 
     $floatVal = eval("brSmoothWeightsContext -query -range " + $toolName);
     floatSliderGrp -edit -value $floatVal brSmoothWeightsRange;

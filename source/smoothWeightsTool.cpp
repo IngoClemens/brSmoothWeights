@@ -33,9 +33,11 @@ smoothWeightsTool::smoothWeightsTool()
     drawRangeVal = true;
     enterToolCommandVal = "";
     exitToolCommandVal = "";
+    fractionOversamplingVal = false;
     keepShellsTogetherVal = true;
     lineWidthVal = 1;
     messageVal = 2;
+    oversamplingVal = 1;
     rangeVal = 0.5;
     sizeVal = 5.0;
     strengthVal = 0.25;
@@ -94,12 +96,16 @@ bool smoothWeightsTool::isUndoable() const
 #define kExitToolCommandFlagLong        "-exitToolCommand"
 #define kFloodFlag                      "-f"
 #define kFloodFlagLong                  "-flood"
+#define kFractionOversamplingFlag       "-fo"
+#define kFractionOversamplingFlagLong   "-fractionOversampling"
 #define kKeepShellsTogetherFlag         "-kst"
 #define kKeepShellsTogetherFlagLong     "-keepShellsTogether"
 #define kLineWidthFlag                  "-lw"
 #define kLineWidthFlagLong              "-lineWidth"
 #define kMessageFlag                    "-m"
 #define kMessageFlagLong                "-message"
+#define kOversamplingFlag               "-o"
+#define kOversamplingFlagLong           "-oversampling"
 #define kRangeFlag                      "-r"
 #define kRangeFlagLong                  "-range"
 #define kSizeFlag                       "-s"
@@ -129,9 +135,11 @@ MSyntax smoothWeightsTool::newSyntax()
     syntax.addFlag(kDrawRangeFlag, kDrawRangeFlagLong, MSyntax::kBoolean);
     syntax.addFlag(kEnterToolCommandFlag, kEnterToolCommandFlagLong, MSyntax::kString);
     syntax.addFlag(kExitToolCommandFlag, kExitToolCommandFlagLong, MSyntax::kString);
+    syntax.addFlag(kFractionOversamplingFlag, kFractionOversamplingFlagLong, MSyntax::kBoolean);
     syntax.addFlag(kKeepShellsTogetherFlag, kKeepShellsTogetherFlagLong, MSyntax::kBoolean);
     syntax.addFlag(kLineWidthFlag, kLineWidthFlagLong, MSyntax::kLong);
     syntax.addFlag(kMessageFlag, kMessageFlagLong, MSyntax::kLong);
+    syntax.addFlag(kOversamplingFlag, kOversamplingFlagLong, MSyntax::kLong);
     syntax.addFlag(kRangeFlag, kRangeFlagLong, MSyntax::kDouble);
     syntax.addFlag(kSizeFlag, kSizeFlagLong, MSyntax::kDouble);
     syntax.addFlag(kStrengthFlag, kStrengthFlagLong, MSyntax::kDouble);
@@ -210,6 +218,11 @@ MStatus smoothWeightsTool::parseArgs(const MArgList& args)
         status = argData.getFlagArgument(kExitToolCommandFlag, 0, exitToolCommandVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
+    if (argData.isFlagSet(kFractionOversamplingFlag))
+    {
+        status = argData.getFlagArgument(kFractionOversamplingFlag, 0, fractionOversamplingVal);
+        CHECK_MSTATUS_AND_RETURN_IT(status);
+    }
     if (argData.isFlagSet(kKeepShellsTogetherFlag))
     {
         status = argData.getFlagArgument(kKeepShellsTogetherFlag, 0, keepShellsTogetherVal);
@@ -223,6 +236,11 @@ MStatus smoothWeightsTool::parseArgs(const MArgList& args)
     if (argData.isFlagSet(kMessageFlag))
     {
         status = argData.getFlagArgument(kMessageFlag, 0, messageVal);
+        CHECK_MSTATUS_AND_RETURN_IT(status);
+    }
+    if (argData.isFlagSet(kOversamplingFlag))
+    {
+        status = argData.getFlagArgument(kOversamplingFlag, 0, oversamplingVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
     if (argData.isFlagSet(kRangeFlag))
@@ -392,12 +410,16 @@ MStatus smoothWeightsTool::finalize()
     cmd += "\"" + enterToolCommandVal + "\"";
     cmd += " " + MString(kExitToolCommandFlag) + " ";
     cmd += "\"" + exitToolCommandVal + "\"";
+    cmd += " " + MString(kFractionOversamplingFlag) + " ";
+    cmd += fractionOversamplingVal;
     cmd += " " + MString(kKeepShellsTogetherFlag) + " ";
     cmd += keepShellsTogetherVal;
     cmd += " " + MString(kLineWidthFlag) + " ";
     cmd += lineWidthVal;
     cmd += " " + MString(kMessageFlag) + " ";
     cmd += messageVal;
+    cmd += " " + MString(kOversamplingFlag) + " ";
+    cmd += oversamplingVal;
     cmd += " " + MString(kRangeFlag) + " ";
     cmd += rangeVal;
     cmd += " " + MString(kSizeFlag) + " ";
@@ -481,6 +503,12 @@ void smoothWeightsTool::setExitToolCommand(MString value)
 }
 
 
+void smoothWeightsTool::setFractionOversampling(bool value)
+{
+    fractionOversamplingVal = value;
+}
+
+
 void smoothWeightsTool::setKeepShellsTogether(bool value)
 {
     keepShellsTogetherVal = value;
@@ -496,6 +524,12 @@ void smoothWeightsTool::setLineWidth(int value)
 void smoothWeightsTool::setMessage(int value)
 {
     messageVal = value;
+}
+
+
+void smoothWeightsTool::setOversampling(int value)
+{
+    oversamplingVal = value;
 }
 
 
@@ -611,9 +645,11 @@ smoothWeightsContext::smoothWeightsContext()
     drawRangeVal = true;
     enterToolCommandVal = "";
     exitToolCommandVal = "";
+    fractionOversamplingVal = false;
     keepShellsTogetherVal = true;
     lineWidthVal = 1;
     messageVal = 2;
+    oversamplingVal = 1;
     rangeVal = 0.5;
     sizeVal = 5.0;
     strengthVal = 0.25;
@@ -1168,9 +1204,11 @@ void smoothWeightsContext::doReleaseCommon(MEvent event)
         cmd->setDrawBrush(drawBrushVal);
         cmd->setEnterToolCommand(enterToolCommandVal);
         cmd->setExitToolCommand(exitToolCommandVal);
+        cmd->setFractionOversampling(fractionOversamplingVal);
         cmd->setKeepShellsTogether(keepShellsTogetherVal);
         cmd->setLineWidth(lineWidthVal);
         cmd->setMessage(messageVal);
+        cmd->setOversampling(oversamplingVal);
         cmd->setRange(rangeVal);
         cmd->setSize(sizeVal);
         cmd->setStrength(strengthVal);
@@ -1712,7 +1750,7 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
 {
     MStatus status = MStatus::kSuccess;
 
-    unsigned int i, j;
+    unsigned int i, j, m;
 
     bool flood = !eventIsValid(event);
 
@@ -1907,51 +1945,55 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
         // smooth the weights in a multi-threaded loop
         // -------------------------------------------------------------
 
-        tbb::parallel_for(tbb::blocked_range<unsigned int>(0, rangeCount),
-                          [&](tbb::blocked_range<unsigned int> r)
+        for (m = 0; m < (unsigned)oversamplingVal; m ++)
         {
-            for (unsigned int k = r.begin(); k < r.end(); k ++)
+            tbb::parallel_for(tbb::blocked_range<unsigned int>(0, rangeCount),
+                              [&](tbb::blocked_range<unsigned int> r)
             {
-                unsigned int rangeIndex = (unsigned)rangeIndices[k];
-
-                // Only smooth the indices which are have their compute
-                // flag set to true. This applies to all vertices in
-                // single-shell mode or only one vertex in each shell-
-                // boundary pair.
-                if (computeIndex[rangeIndex])
+                for (unsigned int k = r.begin(); k < r.end(); k ++)
                 {
-                    int oppositeIndex = indexMap[rangeIndex];
-                    int oppositeElement = -1;
+                    unsigned int rangeIndex = (unsigned)rangeIndices[k];
 
-                    // In case of the multi-shell mode check if an
-                    // opposite vertex exists for the current vertex.
-                    if (keepShellsTogetherVal && oppositeIndex > -1)
+                    // Only smooth the indices which are have their
+                    // compute flag set to true. This applies to all
+                    // vertices in single-shell mode or only one vertex
+                    // in each shell-boundary pair.
+                    if (computeIndex[rangeIndex])
                     {
-                        // Go through all indices of the range and find
-                        // the position of the opposite vertex index.
-                        // This is needed for being able to set the
-                        // according weights to the same values as the
-                        // source boundary index.
-                        for (unsigned l = 0; l < rangeCount; l ++)
+                        int oppositeIndex = indexMap[rangeIndex];
+                        int oppositeElement = -1;
+
+                        // In case of the multi-shell mode check if an
+                        // opposite vertex exists for the current
+                        // vertex.
+                        if (keepShellsTogetherVal && oppositeIndex > -1)
                         {
-                            if ((int)rangeIndices[l] == oppositeIndex)
+                            // Go through all indices of the range and
+                            // find the position of the opposite vertex
+                            // index. This is needed for being able to
+                            // set the according weights to the same
+                            // values as the source boundary index.
+                            for (unsigned l = 0; l < rangeCount; l ++)
                             {
-                                oppositeElement = (int)l;
-                                break;
+                                if ((int)rangeIndices[l] == oppositeIndex)
+                                {
+                                    oppositeElement = (int)l;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    computeWeights(rangeIndex,
-                                   orderedValues[rangeIndex],
-                                   oppositeIndex,
-                                   k,
-                                   oppositeElement,
-                                   rangeIndices,
-                                   flood);
+                        computeWeights(rangeIndex,
+                                       orderedValues[rangeIndex],
+                                       oppositeIndex,
+                                       k,
+                                       oppositeElement,
+                                       rangeIndices,
+                                       flood);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // Set the new weights.
         skinFn.setWeights(meshDag, vtxComponents, influenceIndices, smoothedWeights, normalize);
@@ -2046,7 +2088,10 @@ void smoothWeightsContext::computeWeights(unsigned int index,
     }
 
     // Get the scale value based on the brush falloff and strength.
-    scale = getFalloffValue(scale, strengthVal);
+    double smoothStrength = strengthVal;
+    if (fractionOversamplingVal)
+        smoothStrength /= oversamplingVal;
+    scale = getFalloffValue(scale, smoothStrength);
 
     unsigned int connectedCount = connected.length();
 
@@ -2096,8 +2141,7 @@ void smoothWeightsContext::computeWeights(unsigned int index,
             weight = currentWeights[w];
 
         smoothedWeights.set(weight, k);
-        if (!flood)
-            currentWeights.set(weight, w);
+        setCurrentWeight(weight, w, flood);
 
         newWeights.set(weight, i);
         inflIndices.set((int)i, i);
@@ -2133,15 +2177,13 @@ void smoothWeightsContext::computeWeights(unsigned int index,
                 if (i < maxLimitIndex)
                 {
                     smoothedWeights.set(0.0, k);
-                    if (!flood)
-                        currentWeights.set(0.0, w);
+                    setCurrentWeight(0.0, w, flood);
                 }
                 else
                 {
                     double weight = newWeights[sortedIndex];
                     smoothedWeights.set(weight, k);
-                    if (!flood)
-                        currentWeights.set(weight, w);
+                    setCurrentWeight(weight, w, flood);
                     maxWeight += weight;
                 }
             }
@@ -2159,8 +2201,7 @@ void smoothWeightsContext::computeWeights(unsigned int index,
                 unsigned int w = influenceCount * index + i;
                 double value = smoothedWeights[k] / maxWeight;
                 smoothedWeights.set(value, k);
-                if (!flood)
-                    currentWeights.set(value, w);
+                setCurrentWeight(value, w, flood);
             }
         }
 
@@ -2180,11 +2221,41 @@ void smoothWeightsContext::computeWeights(unsigned int index,
                 k = influenceCount * (unsigned)oppositeElement + i;
                 unsigned int w = influenceCount * (unsigned)oppositeIndex + i;
                 smoothedWeights.set(value, k);
-                if (!flood)
-                    currentWeights.set(value, w);
+                setCurrentWeight(value, w, flood);
             }
         }
     }
+}
+
+
+//
+// Description:
+//      Set the weight value at the given index for the current weights
+//      array. The value only needs to get set when flooding is
+//      performed and the oversampling is set to anything larger than 1.
+//      The reason for this switch when flooding is because in order to
+//      get a smooth result the flooding needs to draw values from the
+//      original weights list. If this is not the case the result could
+//      be jaggy because some vertices draw from unsmoothed weights and
+//      others from already smoothed neighbours. But when flood
+//      smoothing with several iterations the next iteration needs to
+//      refer to previous smoothed iteration. Therefore the smoothed
+//      values need to get stored in the currentWeights array.
+//
+// Input Arguments:
+//      event               The mouse event.
+//      indices             The list of vertex indices along the
+//                          intersection ray.
+//      distances           The list of distances of the vertices to the
+//                          intersection ray.
+//
+// Return Value:
+//      MStatus             The MStatus for selecting the components.
+//
+void smoothWeightsContext::setCurrentWeight(double value, unsigned int index, bool flood)
+{
+    if (!flood || (flood && oversamplingVal > 1))
+        currentWeights.set(value, index);
 }
 
 
@@ -2689,6 +2760,10 @@ void smoothWeightsContext::getVerticesInVolumeRange(int index,
     double radius = sizeVal * rangeVal;
     radius *= radius;
 
+    double smoothStrength = strengthVal;
+    if (fractionOversamplingVal)
+        smoothStrength /= oversamplingVal;
+
     MItMeshVertex vtxIter(meshDag);
     int prevIndex;
     vtxIter.setIndex(index, prevIndex);
@@ -2718,7 +2793,7 @@ void smoothWeightsContext::getVerticesInVolumeRange(int index,
             rangeIndices.append(volumeIndex);
 
             float value = (float)(1 - (delta / radius));
-            value = (float)getFalloffValue(value, strengthVal);
+            value = (float)getFalloffValue(value, smoothStrength);
             values.append(value);
         }
 
@@ -3079,6 +3154,13 @@ void smoothWeightsContext::setFlood(double value)
 }
 
 
+void smoothWeightsContext::setFractionOversampling(bool value)
+{
+    fractionOversamplingVal = value;
+    MToolsInfo::setDirtyFlag(*this);
+}
+
+
 void smoothWeightsContext::setKeepShellsTogether(bool value)
 {
     keepShellsTogetherVal = value;
@@ -3099,6 +3181,13 @@ void smoothWeightsContext::setMessage(int value)
     MToolsInfo::setDirtyFlag(*this);
 
     setInViewMessage(true);
+}
+
+
+void smoothWeightsContext::setOversampling(int value)
+{
+    oversamplingVal = value;
+    MToolsInfo::setDirtyFlag(*this);
 }
 
 
@@ -3214,6 +3303,12 @@ MString smoothWeightsContext::getExitToolCommand()
 }
 
 
+bool smoothWeightsContext::getFractionOversampling()
+{
+    return fractionOversamplingVal;
+}
+
+
 bool smoothWeightsContext::getKeepShellsTogether()
 {
     return keepShellsTogetherVal;
@@ -3229,6 +3324,12 @@ int smoothWeightsContext::getLineWidth()
 int smoothWeightsContext::getMessage()
 {
     return messageVal;
+}
+
+
+int smoothWeightsContext::getOversampling()
+{
+    return oversamplingVal;
 }
 
 
@@ -3309,9 +3410,11 @@ MStatus smoothWeightsContextCmd::appendSyntax()
     syn.addFlag(kEnterToolCommandFlag, kEnterToolCommandFlagLong, MSyntax::kString);
     syn.addFlag(kExitToolCommandFlag, kExitToolCommandFlagLong, MSyntax::kString);
     syn.addFlag(kFloodFlag, kFloodFlagLong, MSyntax::kDouble);
+    syn.addFlag(kFractionOversamplingFlag, kFractionOversamplingFlagLong, MSyntax::kBoolean);
     syn.addFlag(kKeepShellsTogetherFlag, kKeepShellsTogetherFlagLong, MSyntax::kBoolean);
     syn.addFlag(kLineWidthFlag, kLineWidthFlagLong, MSyntax::kLong);
     syn.addFlag(kMessageFlag, kMessageFlagLong, MSyntax::kLong);
+    syn.addFlag(kOversamplingFlag, kOversamplingFlagLong, MSyntax::kLong);
     syn.addFlag(kRangeFlag, kRangeFlagLong, MSyntax::kDouble);
     syn.addFlag(kSizeFlag, kSizeFlagLong, MSyntax::kDouble);
     syn.addFlag(kStrengthFlag, kStrengthFlagLong, MSyntax::kDouble);
@@ -3413,6 +3516,13 @@ MStatus smoothWeightsContextCmd::doEditFlags()
         smoothContext->setFlood(value);
     }
 
+    if (argData.isFlagSet(kFractionOversamplingFlag))
+    {
+        bool value;
+        status = argData.getFlagArgument(kFractionOversamplingFlag, 0, value);
+        smoothContext->setFractionOversampling(value);
+    }
+
     if (argData.isFlagSet(kKeepShellsTogetherFlag))
     {
         bool value;
@@ -3432,6 +3542,13 @@ MStatus smoothWeightsContextCmd::doEditFlags()
         int value;
         status = argData.getFlagArgument(kMessageFlag, 0, value);
         smoothContext->setMessage(value);
+    }
+
+    if (argData.isFlagSet(kOversamplingFlag))
+    {
+        int value;
+        status = argData.getFlagArgument(kOversamplingFlag, 0, value);
+        smoothContext->setOversampling(value);
     }
 
     if (argData.isFlagSet(kRangeFlag))
@@ -3517,6 +3634,9 @@ MStatus smoothWeightsContextCmd::doQueryFlags()
     if (argData.isFlagSet(kExitToolCommandFlag))
         setResult(smoothContext->getExitToolCommand());
 
+    if (argData.isFlagSet(kFractionOversamplingFlag))
+        setResult(smoothContext->getFractionOversampling());
+
     if (argData.isFlagSet(kKeepShellsTogetherFlag))
         setResult(smoothContext->getKeepShellsTogether());
 
@@ -3525,6 +3645,9 @@ MStatus smoothWeightsContextCmd::doQueryFlags()
 
     if (argData.isFlagSet(kMessageFlag))
         setResult(smoothContext->getMessage());
+
+    if (argData.isFlagSet(kOversamplingFlag))
+        setResult(smoothContext->getOversampling());
 
     if (argData.isFlagSet(kRangeFlag))
         setResult(smoothContext->getRange());
