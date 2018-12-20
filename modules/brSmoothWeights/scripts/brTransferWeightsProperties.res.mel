@@ -1,116 +1,112 @@
 // ---------------------------------------------------------------------
-// brSmoothWeightsProperties.res.mel
+// brTransferWeightsProperties.res.mel
 // ---------------------------------------------------------------------
 
 displayString -replace
-              -value "Smoothes only the selected vertices. When off only unselected vertices are affected."
-              m_brSmoothWeightsProperties.kAffectSelected;
+              -value "Transfer affects only the selected vertices. When off only unselected vertices are affected."
+              m_brTransferWeightsProperties.kAffectSelected;
 
 displayString -replace
               -value "The color of the brush circle."
-              m_brSmoothWeightsProperties.kColor;
+              m_brTransferWeightsProperties.kColor;
 
 displayString -replace
               -value "No falloff"
-              m_brSmoothWeightsProperties.kCurveNone;
+              m_brTransferWeightsProperties.kCurveNone;
 
 displayString -replace
               -value "Linear falloff"
-              m_brSmoothWeightsProperties.kCurveLinear;
+              m_brTransferWeightsProperties.kCurveLinear;
 
 displayString -replace
               -value "Smooth falloff"
-              m_brSmoothWeightsProperties.kCurveSmooth;
+              m_brTransferWeightsProperties.kCurveSmooth;
 
 displayString -replace
               -value "Narrow falloff"
-              m_brSmoothWeightsProperties.kCurveNarrow;
+              m_brTransferWeightsProperties.kCurveNarrow;
 
 displayString -replace
-              -value "The number of overlapping surfaces considered for smoothing in surface mode."
-              m_brSmoothWeightsProperties.kDepth;
+              -value "The number of overlapping surfaces considered for transferring in surface mode."
+              m_brTransferWeightsProperties.kDepth;
 
 displayString -replace
-              -value "The index of the first overlapping surface considered for smoothing in surface mode."
-              m_brSmoothWeightsProperties.kDepthStart;
+              -value "The index of the first overlapping surface considered for transferring in surface mode."
+              m_brTransferWeightsProperties.kDepthStart;
 
 displayString -replace
-              -value "Displays the brush circle while smoothing."
-              m_brSmoothWeightsProperties.kDrawBrush;
+              -value "Displays the brush circle while transferring."
+              m_brTransferWeightsProperties.kDrawBrush;
 
 displayString -replace
-              -value "Displays the range circle while adjusting the brush size or strength."
-              m_brSmoothWeightsProperties.kDrawRange;
-
-displayString -replace
-              -value ("Applies the smoothing to the current selection with the strength value. " +
+              -value ("Applies the transfer to the current selection with the strength value. " +
                       "When only the mesh is selected the entire mesh will be considered.")
-              m_brSmoothWeightsProperties.kFlood;
+              m_brTransferWeightsProperties.kFlood;
 
 displayString -replace
-              -value ("When smoothing with oversampling the strength value is divided by the number " +
-                      "of samples.")
-              m_brSmoothWeightsProperties.kFractionOversampling;
-
-displayString -replace
-              -value "Smooth the weights of influences even if these are locked."
-              m_brSmoothWeightsProperties.kIgnoreLock;
-
-displayString -replace
-              -value ("Extends the smoothing or selection across a shell boundary by trying to " +
+              -value ("Extends the transfer or selection across a shell boundary by trying to " +
                       "find an equivalent vertex on a neighbouring shell boundary in surface mode.")
-              m_brSmoothWeightsProperties.kKeepShellsTogether;
+              m_brTransferWeightsProperties.kKeepShellsTogether;
 
 displayString -replace
               -value "The line width of the brush display."
-              m_brSmoothWeightsProperties.kLineWidth;
+              m_brTransferWeightsProperties.kLineWidth;
 
 displayString -replace
               -value "The type of in-view message to display while the tool is active."
-              m_brSmoothWeightsProperties.kMessage;
+              m_brTransferWeightsProperties.kMessage;
 
 displayString -replace
-              -value "The number of iterations for the smoothing."
-              m_brSmoothWeightsProperties.kOversampling;
+              -value ("Replace the current weight instead of adding the weight from the source influence " +
+                      "to the existing weight.")
+              m_brTransferWeightsProperties.kReplace;
 
 displayString -replace
-              -value ("The fraction of the brush size in which neighbouring vertices are " +
-                      "considered for smoothing for each vertex in volume mode.")
-              m_brSmoothWeightsProperties.kRange;
+              -value ("Reverse the order of source and destination influences for the transfer.")
+              m_brTransferWeightsProperties.kReverse;
 
 displayString -replace
-              -value "The radius of the brush in which vertices are smoothed."
-              m_brSmoothWeightsProperties.kSize;
+              -value "The radius of the brush in which vertices are transferred."
+              m_brTransferWeightsProperties.kSize;
 
 displayString -replace
               -value "The overall strength of the brush."
-              m_brSmoothWeightsProperties.kStrength;
+              m_brTransferWeightsProperties.kStrength;
 
 displayString -replace
               -value ("The maximum distance to find an equivalent vertex on a neighbouring " +
                       "shell boundary in surface mode.")
-              m_brSmoothWeightsProperties.kTolerance;
+              m_brTransferWeightsProperties.kTolerance;
 
 displayString -replace
               -value "Evaluates only every nth drag iteration. Higher values lead to a staggered evaluation."
-              m_brSmoothWeightsProperties.kUndersampling;
+              m_brTransferWeightsProperties.kUndersampling;
 
 displayString -replace
-              -value ("Enables the volume mode where weights are smoothed based on the vertex distance. " +
+              -value ("Enables the volume mode where weights are transferred based on the vertex distance. " +
                       "Since it's volume based the weights can also spread across shells and nearby surfaces. " +
-                      "When off the weights are smoothed based on the connected neighbours in surface mode.")
-              m_brSmoothWeightsProperties.kVolume;
+                      "When off the weights are transferred based on the connected neighbours in surface mode.")
+              m_brTransferWeightsProperties.kVolume;
 
+
+displayString -replace
+              -value ("Transfer all weights to the destination influence and replace the previous values. " +
+                      "Brute force version of flood.")
+              m_brTransferWeightsProperties.kAbsolute;
 
 displayString -replace
               -value "Display tool tips for all tool settings."
-              m_brSmoothWeightsProperties.kAnnotations;
+              m_brTransferWeightsProperties.kAnnotations;
+
+displayString -replace
+              -value "Enter search string. Use + for combinations."
+              m_brTransferWeightsProperties.kSearch;
 
 // ---------------------------------------------------------------------
 // MIT License
 //
 // Copyright (c) 2018 Ingo Clemens, brave rabbit
-// brSmoothWeights is under the terms of the MIT License
+// brTransferWeights is under the terms of the MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the

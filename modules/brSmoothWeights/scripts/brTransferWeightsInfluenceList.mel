@@ -1,0 +1,536 @@
+// ---------------------------------------------------------------------
+// brTransferWeightsInfluenceList.mel
+//
+// This script creates and handles the influence list for the transfer
+// weights tool.
+//
+// ---------------------------------------------------------------------
+
+
+// ---------------------------------------------------------------------
+// search and filter
+// ---------------------------------------------------------------------
+
+global proc brTransferWeightsSearchJointString()
+{
+    string $query = `textFieldGrp -query -text brTransferWeightsSearchField`;
+    string $items[] = `treeView -query -children "" brTransferWeightsJointTree`;
+
+    string $queryList[];
+    tokenize $query "+" $queryList;
+
+    for ($i in $items)
+    {
+        int $state = 0;
+        for ($q in $queryList)
+        {
+            if (`gmatch $i ("*" + $q + "*")`)
+                $state = 1;
+        }
+        treeView -edit -itemVisible $i $state brTransferWeightsJointTree;
+    }
+}
+
+
+global proc brTransferWeightsClearSearch()
+{
+    string $items[] = `treeView -query -children "" brTransferWeightsJointTree`;
+
+    textFieldGrp -edit -text "" brTransferWeightsSearchField;
+
+    if (size($items) == 0)
+        return;
+
+    for ($i in $items)
+        treeView -edit -itemVisible $i 1 brTransferWeightsJointTree;
+}
+
+
+// ---------------------------------------------------------------------
+// actions
+// ---------------------------------------------------------------------
+
+global proc brTransferWeightsSelectAffectedVertices( string $item )
+{
+    global string $gTransferWeightsMesh;
+    global string $gTransferWeightsSkinCluster;
+
+    select -cl;
+    skinCluster -edit -selectInfluenceVerts $item $gTransferWeightsSkinCluster;
+    doMenuComponentSelection($gTransferWeightsMesh, "vertex");
+}
+
+
+global proc brTransferWeightsSelectAffectedVerticesFromMenu( int $add, int $remove )
+{
+    global string $gTransferWeightsMesh;
+    global string $gTransferWeightsSkinCluster;
+
+    string $joints[] = `treeView -query -selectItem brTransferWeightsJointTree`;
+
+    if (!size($joints))
+        return;
+
+    string $cmd = "skinCluster -edit ";
+    for ($joint in $joints)
+    {
+        $cmd += "-selectInfluenceVerts ";
+        $cmd += $joint;
+        $cmd += " ";
+    }
+
+    if ($add)
+        $cmd += "-addToSelection ";
+    else if ($remove)
+        $cmd += "-removeFromSelection ";
+
+    $cmd += $gTransferWeightsSkinCluster;
+    eval $cmd;
+
+    doMenuComponentSelection($gTransferWeightsMesh, "vertex");
+}
+
+
+global proc brTransferWeightsSetTransferIndices()
+{
+    global string $gTransferWeightsJoints[];
+
+    string $source = `textField -query -text brTransferWeightsSourceInfluenceField`;
+    string $destination = `textField -query -text brTransferWeightsDestinationInfluenceField`;
+
+    int $src = stringArrayFind($source, 0, $gTransferWeightsJoints);
+    int $dest = stringArrayFind($destination, 0, $gTransferWeightsJoints);
+
+    string $fontSource = "plainLabelFont";
+    if ($src == -1)
+        $fontSource = "obliqueLabelFont";
+    string $fontDestination = "plainLabelFont";
+    if ($dest == -1)
+        $fontDestination = "obliqueLabelFont";
+
+    textField -edit -font $fontSource brTransferWeightsSourceInfluenceField;
+    textField -edit -font $fontDestination brTransferWeightsDestinationInfluenceField;
+
+    string $cmd = "brTransferWeightsContext -edit ";
+    $cmd += "-sourceInfluence " + $src + " ";
+    $cmd += "-destinationInfluence " + $dest + " ";
+    $cmd += "`currentCtx`;";
+
+    evalEcho($cmd);
+}
+
+
+global proc brTransferWeightsSelectionChanged()
+{
+    string $joints[] = `treeView -query -selectItem brTransferWeightsJointTree`;
+    string $joint;
+
+    string $source = "";
+    string $destination = "";
+
+    // store the current and previous joint
+    string $lastJoint = "";
+    if (`optionVar -exists "brTransferWeightsSelectedJoint"`)
+        $lastJoint = `optionVar -query "brTransferWeightsSelectedJoint"`;
+    optionVar -stringValue "brTransferWeightsLastSelectedJoint" $lastJoint;
+
+    if (size($joints) != 0)
+    {
+        $source = $joints[0];
+
+        if (size($joints) == 2)
+        {
+            $source = $lastJoint;
+
+            $joints = stringArrayRemove({$lastJoint}, $joints);
+            $destination = $joints[0];
+        }
+        $joint = $joints[0];
+    }
+    optionVar -stringValue "brTransferWeightsSelectedJoint" $joint;
+
+    textField -edit -text $source brTransferWeightsSourceInfluenceField;
+    textField -edit -text $destination brTransferWeightsDestinationInfluenceField;
+
+    brTransferWeightsSetTransferIndices;
+}
+
+
+global proc brTransferWeightsSetFieldLabels()
+{
+    string $src = "Source";
+    string $dest = "Destination";
+    if (`symbolCheckBox -query -value brTransferWeightsReverseButton`)
+    {
+        $dest = "Source";
+        $src = "Destination";
+    }
+
+    text -edit -label $src brTransferWeightsSourceLabel;
+    text -edit -label $dest brTransferWeightsDestinationLabel;
+}
+
+
+// ---------------------------------------------------------------------
+// get the mesh selection and the skin cluster
+// ---------------------------------------------------------------------
+
+proc string brTransferWeightsGetSkinCluster( string $shape )
+{
+    string $hist[] =`listHistory -pruneDagObjects 1 -future 0 -interestLevel 2 $shape`;
+    if (size($hist) == 0)
+        return "";
+    for ($h in $hist)
+    {
+        if (`nodeType $h` == "skinCluster")
+            return $h;
+    }
+}
+
+
+global proc brTransferWeightsGetSelection()
+{
+    global string $gTransferWeightsMesh;
+    global string $gTransferWeightsSkinCluster;
+
+    string $sel[] = `ls -selection -long`;
+    if (size($sel) == 0)
+    {
+        brTransferWeightsClear;
+        return;
+    }
+
+    string $node[];
+    tokenize $sel[0] "." $node;
+
+    string $skin;
+    if (`nodeType $node[0]` == "transform")
+    {
+        string $shape[] = `listRelatives -shapes -fullPath $node[0]`;
+        if (size($shape) == 0)
+        {
+            brTransferWeightsClear;
+            return;
+        }
+        $node[0] = $shape[0];
+    }
+
+    if (`nodeType $node[0]` == "mesh")
+    {
+        $skin = brTransferWeightsGetSkinCluster($node[0]);
+    }
+
+    if ($skin != "")
+    {
+        int $newMesh = 1;
+        if ($gTransferWeightsMesh == $node[0])
+            $newMesh = 0;
+        $gTransferWeightsMesh = $node[0];
+        $gTransferWeightsSkinCluster = $skin;
+        brTransferWeightsListInfluences($skin, $newMesh);
+    }
+    else
+        brTransferWeightsClear;
+}
+
+
+global proc brTransferWeightsClear()
+{
+    treeView -edit -removeAll brTransferWeightsJointTree;
+    textField -edit -text "" brTransferWeightsSourceInfluenceField;
+    textField -edit -text "" brTransferWeightsDestinationInfluenceField;
+    brTransferWeightsContext -edit -sourceInfluence -1 -destinationInfluence -1 `currentCtx`;
+}
+
+
+// ---------------------------------------------------------------------
+// influence listing
+// ---------------------------------------------------------------------
+
+global proc brTransferWeightsListInfluences( string $skin, int $newMesh )
+{
+    global string $gTransferWeightsJoints[];
+
+    int $refresh = 1;
+
+    string $joints[] = `skinCluster -query -influence $skin`;
+    if (!$newMesh && size($gTransferWeightsJoints) == size($joints))
+        $refresh = 0;
+
+    if ($refresh)
+    {
+        $gTransferWeightsJoints = $joints;
+
+        treeView -edit -removeAll brTransferWeightsJointTree;
+
+        // The listing of influences has been extracted from the
+        // procedure skinClusterInflPopulate() in the file
+        // skinClusterInflMenu.mel to list the influences by hierarchy.
+        source skinClusterInflMenu;
+
+        string $inflList[];
+        string $inflListShortNames[];
+        int $inflListParentIndexes[];
+        int $inflTypes[];
+        int $sortList = 2;
+
+        skinClusterInflFindInfluenceNodes({$skin},
+                                          $inflList,
+                                          $inflListShortNames,
+                                          $inflListParentIndexes,
+                                          $inflTypes,
+                                          $sortList);
+
+        int $numInfls = size($inflList);
+        for ($i = 0; $i < $numInfls; $i ++)
+        {
+            string $infl = $inflList[$i];
+            string $inflParent = "";
+
+            if ($inflListParentIndexes[$i] >= 0)
+            {
+                $inflParent = $inflList[$inflListParentIndexes[$i]];
+            }
+
+            brTransferWeightsAddInfluenceToList $infl $inflParent;
+        }
+    }
+}
+
+
+proc string brTransferWeightsGetLockImage( string $item )
+{
+    string $lockImage = "Lock_OFF_grey.png";
+    if (`attributeQuery -n $item -exists "liw"`)
+    {
+        if (`getAttr($item + ".liw")`)
+            $lockImage = "Lock_ON.png";
+    }
+    return $lockImage;
+}
+
+
+global proc brTransferWeightsAddInfluenceToList( string $jnt, string $parent )
+{
+    string $lock = `brTransferWeightsGetLockImage $jnt`;
+    treeView -edit
+             -addItem $jnt $parent
+             -pressCommand 1 brTransferWeightsToggleLockState
+             brTransferWeightsJointTree;
+    treeView -edit
+             -image $jnt 1 $lock
+             brTransferWeightsJointTree;
+}
+
+
+proc brTransferWeightsPerformToggleLockState( string $joints[] )
+{
+    for ($joint in $joints)
+    {
+        if (`attributeQuery -node $joint -exists "liw"`)
+        {
+            int $lock = `getAttr($joint + ".liw")`;
+            setAttr($joint + ".liw", !$lock);
+            string $image = brTransferWeightsGetLockImage($joint);
+            treeView -edit -image $joint 1 $image brTransferWeightsJointTree;
+        }
+    }
+}
+
+
+global proc brTransferWeightsToggleLockState( string $button, int $state )
+{
+    string $joints[] = `treeView -query -selectItem brTransferWeightsJointTree`;
+    if (!size($joints))
+      $joints[0] = $button;
+    brTransferWeightsPerformToggleLockState($joints);
+}
+
+
+global proc brTransferWeightsInvertLockState()
+{
+    string $joints[] = `treeView -query -children "" brTransferWeightsJointTree`;
+    brTransferWeightsPerformToggleLockState($joints);
+}
+
+
+global proc brTransferWeightsLockInfluence( int $selected, int $state )
+{
+    string $sel[] = `treeView -query -selectItem brTransferWeightsJointTree`;
+    string $all[] = `treeView -query -children "" brTransferWeightsJointTree`;
+
+    string $joints[];
+    if ($selected)
+        $joints = $sel;
+    else
+        $joints = stringArrayRemove($sel, $all);
+
+    for ($joint in $joints)
+    {
+        if (`attributeQuery -node $joint -exists "liw"`)
+        {
+            setAttr($joint + ".liw", $state);
+            string $image = brTransferWeightsGetLockImage($joint);
+            treeView -edit -image $joint 1 $image brTransferWeightsJointTree;
+        }
+    }
+}
+
+
+// ---------------------------------------------------------------------
+// building the influence ui
+// ---------------------------------------------------------------------
+
+global proc brTransferWeightsInfluenceList()
+{
+    string $mainForm = `frameLayout -label "Influences"
+                                    -labelIndent 3
+                                    -collapsable 0
+                                    -collapse 0
+                                    -marginWidth 10
+                                    -marginHeight 5`;
+
+        string $influenceForm = `formLayout`;
+
+            text -label "Source" brTransferWeightsSourceLabel;
+            string $labelDivider = `text -label ""`;
+            text -label "Destination" brTransferWeightsDestinationLabel;
+
+            textField -placeholderText "Select from list or enter name"
+                      -changeCommand brTransferWeightsSetTransferIndices
+                      brTransferWeightsSourceInfluenceField;
+            symbolCheckBox  -onImage "brTransferWeightsArrowLeft.png"
+                            -offImage "brTransferWeightsArrowRight.png"
+                            brTransferWeightsReverseButton;
+            textField -placeholderText "Select from list or enter name"
+                      -changeCommand brTransferWeightsSetTransferIndices
+                      brTransferWeightsDestinationInfluenceField;
+
+            textFieldGrp -label ""
+                         -placeholderText "Enter search string. Use + for combinations"
+                         -columnWidth2 0 135
+                         -columnAttach2 "left" "right"
+                         -columnOffset2 0 0
+                         -adjustableColumn2 2
+                         -tcc brTransferWeightsSearchJointString
+                         brTransferWeightsSearchField;
+            string $clearButton = `button -label "Clear"
+                                          -width 46
+                                          -command
+                                          brTransferWeightsClearSearch`;
+
+            // ---------------------------------------------------------
+            // influence list
+            // ---------------------------------------------------------
+            treeView -height 200
+                     -numberOfButtons 1
+                     -attachButtonRight 0
+                     -allowDragAndDrop 1
+                     -allowReparenting 0
+                     -selectionChangedCommand brTransferWeightsSelectionChanged
+                     -itemDblClickCommand brTransferWeightsSelectAffectedVertices
+                     brTransferWeightsJointTree;
+
+            popupMenu;
+                menuItem -label "Toggle Lock"
+                         -command "brTransferWeightsToggleLockState(\"\", 0)";
+                menuItem -label "Invert All Locks"
+                         -command "brTransferWeightsInvertLockState";
+                menuItem -divider 1;
+                menuItem -label "Lock Selected"
+                         -command "brTransferWeightsLockInfluence(1, 1)";
+                menuItem -label "Unlock Selected"
+                         -command "brTransferWeightsLockInfluence(1, 0)";
+                menuItem -label "Lock Unselected"
+                         -command "brTransferWeightsLockInfluence(0, 1)";
+                menuItem -label "Unlock Unselected"
+                         -command "brTransferWeightsLockInfluence(0, 0)";
+                menuItem -divider 1;
+                menuItem -label "Select Affected Vertices"
+                         -command "brTransferWeightsSelectAffectedVerticesFromMenu(0, 0)";
+                menuItem -label "Add Affected Vertices To Selection"
+                         -command "brTransferWeightsSelectAffectedVerticesFromMenu(1, 0)";
+                menuItem -label "Remove Affected Vertices From Selection"
+                         -command "brTransferWeightsSelectAffectedVerticesFromMenu(0, 1)";
+
+            formLayout -edit
+
+                       -attachForm brTransferWeightsSourceLabel "top" 5
+                       -attachForm brTransferWeightsSourceLabel "left" 2
+
+                       -attachForm $labelDivider "top" 1
+
+                       -attachForm brTransferWeightsDestinationLabel "top" 5
+                       -attachForm brTransferWeightsDestinationLabel "right" 0
+
+                       -attachForm brTransferWeightsSourceInfluenceField "left" 3
+
+                       -attachForm brTransferWeightsDestinationInfluenceField "right" 0
+
+                       -attachForm brTransferWeightsSearchField "left" 0
+
+                       -attachForm $clearButton "right" 0
+
+                       -attachForm brTransferWeightsJointTree "left" 5
+                       -attachForm brTransferWeightsJointTree "right" 0
+                       -attachForm brTransferWeightsJointTree "bottom" 0
+
+                       -attachPosition $labelDivider "left" 0 45
+                       -attachPosition $labelDivider "right" 0 55
+
+                       -attachControl brTransferWeightsSourceLabel "right" 5 $labelDivider
+
+                       -attachControl brTransferWeightsDestinationLabel "left" 5 $labelDivider
+
+                       -attachControl brTransferWeightsReverseButton "top" 0 $labelDivider
+
+                       -attachPosition brTransferWeightsReverseButton "left" 0 45
+                       -attachPosition brTransferWeightsReverseButton "right" 0 55
+
+                       -attachControl brTransferWeightsSourceInfluenceField "top" 5 brTransferWeightsSourceLabel
+                       -attachControl brTransferWeightsSourceInfluenceField "right" 5 brTransferWeightsReverseButton
+
+                       -attachControl brTransferWeightsDestinationInfluenceField "top" 5 brTransferWeightsDestinationLabel
+                       -attachControl brTransferWeightsDestinationInfluenceField "left" 5 brTransferWeightsReverseButton
+
+                       -attachControl brTransferWeightsSearchField "top" 15 brTransferWeightsSourceInfluenceField
+                       -attachControl brTransferWeightsSearchField "right" 2 $clearButton
+
+                       -attachControl $clearButton "top" 15 brTransferWeightsDestinationInfluenceField
+
+                       -attachControl brTransferWeightsJointTree "top" 5 brTransferWeightsSearchField
+
+                       $influenceForm;
+
+        setParent ..;
+
+    setParent ..;
+}
+
+// ---------------------------------------------------------------------
+// MIT License
+//
+// Copyright (c) 2018 Ingo Clemens, brave rabbit
+// brTransferWeights is under the terms of the MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Author: Ingo Clemens    www.braverabbit.com
+// ---------------------------------------------------------------------

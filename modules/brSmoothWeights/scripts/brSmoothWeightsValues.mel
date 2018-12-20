@@ -38,6 +38,9 @@ global proc brSmoothWeightsOptionValues( string $toolName )
     $intVal = eval("brSmoothWeightsContext -query -fractionOversampling " + $toolName);
     checkBoxGrp -edit -value1 $intVal brSmoothWeightsFractionOversamplingCheck;
 
+    $intVal = eval("brSmoothWeightsContext -query -ignoreLock " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brSmoothWeightsIgnoreLockCheck;
+
     $intVal = eval("brSmoothWeightsContext -query -keepShellsTogether " + $toolName);
     checkBoxGrp -edit -value1 $intVal brSmoothWeightsKeepShellsTogetherCheck;
 

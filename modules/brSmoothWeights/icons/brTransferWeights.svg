@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 23.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="transfer_weights" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+	 y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#BCBCBC;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#D8D8D8;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#5B5B5B;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#AE9CDB;stroke:#3F3F3F;stroke-width:16;stroke-miterlimit:10;}
+</style>
+<rect id="edge_4_" x="275" y="87" class="st0" width="32" height="276"/>
+<rect id="edge_3_" x="58" y="82" class="st0" width="32" height="276"/>
+<rect id="vertex_3_" x="29.4" y="29.4" class="st1" width="90" height="90"/>
+<rect id="vertex_2_" x="29.4" y="171" class="st1" width="90" height="90"/>
+<rect id="vertex_1_" x="29.4" y="312.6" class="st1" width="90" height="90"/>
+<rect id="vertex_11_" x="246" y="29.4" class="st2" width="90" height="90"/>
+<rect id="vertex_10_" x="246" y="171" class="st2" width="90" height="90"/>
+<rect id="vertex_9_" x="246" y="312.6" class="st2" width="90" height="90"/>
+<path id="brush_handle" class="st3" d="M476,113.3L476,113.3c-17.7-12.1-41.8-7.5-53.9,10.2L275,322c-4.5,6.1-1.2,14.9,6.2,16.3
+	c9,1.7,17.9,5.1,26.2,10.4c12.2,7.7,21.5,18.4,27.5,30.6c3.6,7.2,13.7,7.5,18,0.7l133.3-212.9C498.2,149.5,493.7,125.3,476,113.3z"
+	/>
+<path id="brush_tip" class="st3" d="M293.4,369.6c28.5,18.1,37.4,56.1,18.8,84.3c-40.7,61.6-175.3,32.3-168.9,26.2
+	c57.8-55.4,37.9-49.7,65.9-91.6C227.8,360.4,264.9,351.5,293.4,369.6z"/>
+<polygon id="arrow" class="st3" points="43.9,114.9 173.2,114.9 173.2,76.4 327,144.6 173.2,216.6 173.2,177.6 43.9,177.6 "/>
+</svg>

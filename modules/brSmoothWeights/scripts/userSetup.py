@@ -18,7 +18,8 @@ utils.executeDeferred(addMenuItems)
 # MIT License
 #
 # Copyright (c) 2018 Ingo Clemens, brave rabbit
-# brSmoothWeights is under the terms of the MIT License
+# brSmoothWeights and brTransferWeights are under the terms of the MIT
+# License
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the

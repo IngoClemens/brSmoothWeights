@@ -3,18 +3,19 @@
 //  pluginMain.cpp
 //  brSmoothWeights
 //
-//  Created by ingo on 05/09/15.
-//  Copyright (c) 2015 ingo. All rights reserved.
+//  Created by ingo on 11/18/18.
+//  Copyright (c) 2018 ingo. All rights reserved.
 //
 // ---------------------------------------------------------------------
 
 #include <string>
 
-static const std::string kVERSION = "1.0.1";
+static const std::string kVERSION = "1.1.0";
 
 #include <maya/MFnPlugin.h>
 
 #include "smoothWeightsTool.h"
+#include "transferWeightsTool.h"
 
 // ---------------------------------------------------------------------
 // initialization
@@ -32,6 +33,13 @@ MStatus initializePlugin(MObject obj)
     if (status != MStatus::kSuccess)
         status.perror("Register brSmoothWeightsContext failed.");
 
+    status = plugin.registerContextCommand("brTransferWeightsContext",
+                                           transferWeightsContextCmd::creator,
+                                           "brTransferWeightsCmd",
+                                           transferWeightsTool::creator);
+    if (status != MStatus::kSuccess)
+        status.perror("Register brTransferWeightsContext failed.");
+
     return status;
 }
 
@@ -45,6 +53,11 @@ MStatus uninitializePlugin(MObject obj)
     if (status != MStatus::kSuccess)
         status.perror("Deregister brSmoothWeightsContext failed.");
 
+    status = plugin.deregisterContextCommand("brTransferWeightsContext",
+                                             "brTransferWeightsCmd");
+    if (status != MStatus::kSuccess)
+        status.perror("Deregister brTransferWeightsContext failed.");
+
     return status;
 }
 
@@ -52,7 +65,8 @@ MStatus uninitializePlugin(MObject obj)
 // MIT License
 //
 // Copyright (c) 2018 Ingo Clemens, brave rabbit
-// brSmoothWeights is under the terms of the MIT License
+// brSmoothWeights and brTransferWeights are under the terms of the MIT
+// License
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the

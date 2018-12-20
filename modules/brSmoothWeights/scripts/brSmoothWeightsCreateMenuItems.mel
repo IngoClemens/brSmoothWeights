@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------
 // brSmoothWeightsCreateMenuItems.mel
 //
-// Creates menu items for the smooth skin cluster weights tool in the
-// default Maya skin menu.
+// Creates menu items for the smooth weights tool and the transfer
+// weights tool in the default Maya skin menu.
 //
 // ---------------------------------------------------------------------
 
@@ -11,6 +11,8 @@ global proc brSmoothWeightsDeleteMenuItems()
     deleteUI brSmoothWeightsMenuDivider;
     deleteUI brSmoothWeightsToolMenuItem;
     deleteUI brSmoothWeightsToolOptionMenuItem;
+    deleteUI brTransferWeightsToolMenuItem;
+    deleteUI brTransferWeightsToolOptionMenuItem;
 }
 
 
@@ -48,6 +50,19 @@ proc addMenuItems()
              -image "brSmoothWeights.svg"
              -command "brSmoothWeightsToolCtx; toolPropertyWindow;"
              brSmoothWeightsToolOptionMenuItem;
+
+    $ann = "Transfer skin cluster weights from one influence to another.";
+
+    menuItem -label "Paint Transfer Weights Tool"
+             -annotation $ann
+             -image "brTransferWeights.svg"
+             -command "brTransferWeightsToolCtx"
+             brTransferWeightsToolMenuItem;
+    menuItem -optionBox 1
+             -annotation $ann
+             -image "brTransferWeights.svg"
+             -command "brTransferWeightsToolCtx; toolPropertyWindow;"
+             brTransferWeightsToolOptionMenuItem;
 }
 
 
@@ -83,7 +98,8 @@ global proc brSmoothWeightsCreateMenuItems()
 // MIT License
 //
 // Copyright (c) 2018 Ingo Clemens, brave rabbit
-// brSmoothWeights is under the terms of the MIT License
+// brSmoothWeights and brTransferWeights are under the terms of the MIT
+// License
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the

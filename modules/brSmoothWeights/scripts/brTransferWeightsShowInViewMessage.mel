@@ -1,31 +1,36 @@
 // ---------------------------------------------------------------------
-// brSmoothWeightsToolCtx.mel
+// brTransferWeightsShowInViewMessage.mel
 //
-// Procedures for creating and deleting the context.
+// Controls the display of the in-view message for the brTransferWeights
+// tool.
 //
 // ---------------------------------------------------------------------
 
-global proc brSmoothWeightsToolCtxDelete()
+global proc brTransferWeightsHideInViewMessage()
 {
-    string $context = "brSmoothWeightsContext1";
-    if (!`contextInfo -ex $context`)
-        deleteUI $context;
+    inViewMessage -clear "topCenter";
 }
 
-global proc brSmoothWeightsToolCtx()
+
+global proc brTransferWeightsShowInViewMessage()
 {
-    string $context = "brSmoothWeightsContext1";
-    if (!`contextInfo -ex $context`)
-        $context = `eval("brSmoothWeightsContext")`;
-    setToolTo $context;
-    rememberCtxSettings $context;
+    int $type = eval("brTransferWeightsContext -query -message `currentCtx`;");
+
+    if (!$type)
+        return;
+
+    string $msg = ("<hl>LMB</hl> to transfer.  |  " +
+                   "<hl>MMB</hl> to adjust.  |  " +
+                   "<hl>Shift/Ctrl</hl> to select/deselect.");
+
+    inViewMessage -statusMessage $msg -position "topCenter";
 }
 
 // ---------------------------------------------------------------------
 // MIT License
 //
 // Copyright (c) 2018 Ingo Clemens, brave rabbit
-// brSmoothWeights is under the terms of the MIT License
+// brTransferWeights is under the terms of the MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
