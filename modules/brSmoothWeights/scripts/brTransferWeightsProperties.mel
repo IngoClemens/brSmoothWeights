@@ -1,0 +1,502 @@
+// ---------------------------------------------------------------------
+// brTransferWeightsProperties.mel
+//
+// This script defines the layout and callbacks for the tool settings
+// window.
+//
+// ---------------------------------------------------------------------
+
+global proc brTransferWeightsSetSymbolCheckBox( int $button )
+{
+    string $items[] = `rowColumnLayout -query -childArray brTransferWeightsCurveColumn`;
+    stringArrayRemoveAtIndex(0, $items);
+
+    for ($i = 0; $i < size($items); $i ++)
+    {
+        if ($button == $i)
+            symbolCheckBox -edit -value 1 $items[$i];
+        else
+            symbolCheckBox -edit -value 0 $items[$i];
+    }
+
+    brTransferWeightsContext -edit -curve $button `currentCtx`;
+}
+
+
+global proc brTransferWeightsSetBrushColor()
+{
+    float $color[] = `colorSliderGrp -query -rgbValue brTransferWeightsBrushColorSlider`;
+    brTransferWeightsContext -edit -colorR $color[0] -colorG $color[1] -colorB $color[2] `currentCtx`;
+}
+
+
+global proc brTransferWeightsVolumeToggle( int $state )
+{
+    $state = !$state;
+
+    intSliderGrp -edit -enable $state brTransferWeightsDepthStart;
+    intSliderGrp -edit -enable $state brTransferWeightsDepth;
+    checkBoxGrp -edit -enable $state brTransferWeightsKeepShellsTogetherCheck;
+    floatSliderGrp -edit -enable $state brTransferWeightsTolerance;
+}
+
+
+global proc brTransferWeightsSetLayoutCollapseState( string $layout, int $state )
+{
+    optionVar -intValue ($layout + "State") $state;
+}
+
+
+global proc brTransferWeightsReset()
+{
+    optionVar -remove "brTransferWeightsContext1";
+
+    optionVar -remove "brTransferWeightsSurfaceFrameState";
+    optionVar -remove "brTransferWeightsVolumeFrameState";
+    optionVar -remove "brTransferWeightsDisplayFrameState";
+    optionVar -remove "brTransferWeightsAdvancedFrameState";
+    optionVar -remove "brTransferWeightsHotkeyFrameState";
+
+    optionVar -remove "brTransferWeightsEnableAdvanced";
+    optionVar -remove "brTransferWeightsHideAnnotations";
+}
+
+
+global proc brTransferWeightsSetAbsolute()
+{
+    int $replace = eval("brTransferWeightsContext -query -replace `currentCtx`");
+    float $strength = eval("brTransferWeightsContext -query -strength `currentCtx`");
+    brTransferWeightsContext -edit -flood 1 -replace 1 `currentCtx`;
+    brTransferWeightsContext -edit -replace $replace -strength $strength `currentCtx`;
+}
+
+
+proc addAnnotations()
+{
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kAffectSelected"))
+                brTransferWeightsAffectSelectedCheck;
+    colorSliderGrp -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kColor"))
+                   brTransferWeightsBrushColorSlider;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kCurveNone"))
+                   brTransferWeightsNoneButton;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kCurveLinear"))
+                   brTransferWeightsLinearButton;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kCurveSmooth"))
+                   brTransferWeightsSmoothButton;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kCurveNarrow"))
+                   brTransferWeightsNarrowButton;
+    intSliderGrp -edit
+                 -annotation (uiRes("m_brTransferWeightsProperties.kDepth"))
+                 brTransferWeightsDepth;
+    intSliderGrp -edit
+                 -annotation (uiRes("m_brTransferWeightsProperties.kDepthStart"))
+                 brTransferWeightsDepthStart;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kDrawBrush"))
+                brTransferWeightsDrawBrushCheck;
+    button -edit
+           -annotation (uiRes("m_brTransferWeightsProperties.kFlood"))
+           brTransferWeightsFloodButton;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kKeepShellsTogether"))
+                brTransferWeightsKeepShellsTogetherCheck;
+    intFieldGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kLineWidth"))
+                brTransferWeightsLineWidthField;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kMessage"))
+                brTransferWeightsMessageType;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kReplace"))
+                brTransferWeightsReplaceCheck;
+    symbolCheckBox -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kReverse"))
+                   brTransferWeightsReverseButton;
+    floatSliderGrp -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kSize"))
+                   brTransferWeightsSize;
+    floatSliderGrp -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kStrength"))
+                   brTransferWeightsStrength;
+    floatSliderGrp -edit
+                   -annotation (uiRes("m_brTransferWeightsProperties.kTolerance"))
+                   brTransferWeightsTolerance;
+    intFieldGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kUndersampling"))
+                brTransferWeightsBrushUndersamplingField;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kVolume"))
+                brTransferWeightsVolumeCheck;
+
+    button -edit
+           -annotation (uiRes("m_brTransferWeightsProperties.kAbsolute"))
+           brTransferWeightsAbsoluteButton;
+    checkBoxGrp -edit
+                -annotation (uiRes("m_brTransferWeightsProperties.kAnnotations"))
+                brTransferWeightsDisplayTipsCheck;
+    textFieldGrp -edit
+                 -annotation (uiRes("m_brTransferWeightsProperties.kSearch"))
+                 brTransferWeightsSearchField;
+}
+
+
+proc deleteAnnotations()
+{
+    checkBoxGrp -edit -annotation "" brTransferWeightsAffectSelectedCheck;
+    colorSliderGrp -edit -annotation "" brTransferWeightsBrushColorSlider;
+    symbolCheckBox -edit -annotation "" brTransferWeightsNoneButton;
+    symbolCheckBox -edit -annotation "" brTransferWeightsLinearButton;
+    symbolCheckBox -edit -annotation "" brTransferWeightsSmoothButton;
+    symbolCheckBox -edit -annotation "" brTransferWeightsNarrowButton;
+    intSliderGrp -edit -annotation "" brTransferWeightsDepth;
+    intSliderGrp -edit -annotation "" brTransferWeightsDepthStart;
+    checkBoxGrp -edit -annotation "" brTransferWeightsDrawBrushCheck;
+    button -edit -annotation "" brTransferWeightsFloodButton;
+    checkBoxGrp -edit -annotation "" brTransferWeightsKeepShellsTogetherCheck;
+    intFieldGrp -edit -annotation "" brTransferWeightsLineWidthField;
+    checkBoxGrp -edit -annotation "" brTransferWeightsMessageType;
+    checkBoxGrp -edit -annotation "" brTransferWeightsReplaceCheck;
+    symbolCheckBox -edit -annotation "" brTransferWeightsReverseButton;
+    floatSliderGrp -edit -annotation "" brTransferWeightsSize;
+    floatSliderGrp -edit -annotation "" brTransferWeightsStrength;
+    floatSliderGrp -edit -annotation "" brTransferWeightsTolerance;
+    intFieldGrp -edit -annotation "" brTransferWeightsBrushUndersamplingField;
+    checkBoxGrp -edit -annotation "" brTransferWeightsVolumeCheck;
+
+    button -edit -annotation "" brTransferWeightsAbsoluteButton;
+    checkBoxGrp -edit -annotation "" brTransferWeightsDisplayTipsCheck;
+    textFieldGrp -edit -annotation "" brTransferWeightsSearchField;
+}
+
+
+proc int annotationsState()
+{
+    if (`optionVar -exists "brTransferWeightsHideAnnotations"`)
+        return `optionVar -query "brTransferWeightsHideAnnotations"`;
+    return 1;
+}
+
+
+global proc brTransferWeightsToggleAnnotations()
+{
+    if (annotationsState())
+        addAnnotations;
+    else
+        deleteAnnotations;
+}
+
+
+global proc brTransferWeightsSetCallbacks( string $parent )
+{
+    checkBoxGrp -edit
+                -changeCommand "brTransferWeightsContext -edit -affectSelected #1 `currentCtx`;"
+                brTransferWeightsAffectSelectedCheck;
+    colorSliderGrp -edit
+                   -changeCommand "brTransferWeightsSetBrushColor"
+                   brTransferWeightsBrushColorSlider;
+    symbolCheckBox -edit
+                   -changeCommand "brTransferWeightsSetSymbolCheckBox 0"
+                   brTransferWeightsNoneButton;
+    symbolCheckBox -edit
+                   -changeCommand "brTransferWeightsSetSymbolCheckBox 1"
+                   brTransferWeightsLinearButton;
+    symbolCheckBox -edit
+                   -changeCommand "brTransferWeightsSetSymbolCheckBox 2"
+                   brTransferWeightsSmoothButton;
+    symbolCheckBox -edit
+                   -changeCommand "brTransferWeightsSetSymbolCheckBox 3"
+                   brTransferWeightsNarrowButton;
+    intSliderGrp -edit
+                 -changeCommand "brTransferWeightsContext -edit -depth `intSliderGrp -query -value brTransferWeightsDepth` `currentCtx`;"
+                 brTransferWeightsDepth;
+    intSliderGrp -edit
+                 -changeCommand "brTransferWeightsContext -edit -depthStart `intSliderGrp -query -value brTransferWeightsDepthStart` `currentCtx`;"
+                 brTransferWeightsDepthStart;
+    checkBoxGrp -edit
+                -changeCommand "brTransferWeightsContext -edit -drawBrush #1 `currentCtx`;"
+                brTransferWeightsDrawBrushCheck;
+    button -edit
+           -command "brTransferWeightsContext -edit -flood `floatSliderGrp -query -value brTransferWeightsStrength` `currentCtx`;"
+           brTransferWeightsFloodButton;
+    checkBoxGrp -edit
+                -changeCommand "brTransferWeightsContext -edit -keepShellsTogether #1 `currentCtx`;"
+                brTransferWeightsKeepShellsTogetherCheck;
+    intFieldGrp -edit
+                -changeCommand "brTransferWeightsContext -edit -lineWidth #1 `currentCtx`;"
+                brTransferWeightsLineWidthField;
+    checkBoxGrp -edit
+                -changeCommand "brTransferWeightsContext -edit -message #1 `currentCtx`;"
+                brTransferWeightsMessageType;
+    checkBoxGrp -edit
+                -changeCommand "brTransferWeightsContext -edit -replace #1 `currentCtx`;"
+                brTransferWeightsReplaceCheck;
+    symbolCheckBox -edit
+                   -changeCommand "brTransferWeightsContext -edit -reverse #1 `currentCtx`;"
+                   brTransferWeightsReverseButton;
+    floatSliderGrp -edit
+                   -changeCommand "brTransferWeightsContext -edit -size `floatSliderGrp -query -value brTransferWeightsSize` `currentCtx`;"
+                   brTransferWeightsSize;
+    floatSliderGrp -edit
+                   -changeCommand "brTransferWeightsContext -edit -strength `floatSliderGrp -query -value brTransferWeightsStrength` `currentCtx`;"
+                   brTransferWeightsStrength;
+    floatSliderGrp -edit
+                   -changeCommand "brTransferWeightsContext -edit -tolerance `floatSliderGrp -query -value brTransferWeightsTolerance` `currentCtx`;"
+                   brTransferWeightsTolerance;
+    intFieldGrp -edit
+                -changeCommand "brTransferWeightsContext -edit -undersampling #1 `currentCtx`;"
+                brTransferWeightsBrushUndersamplingField;
+    checkBoxGrp -edit
+                -changeCommand "brTransferWeightsVolumeToggle #1; brTransferWeightsContext -edit -volume #1 `currentCtx`;"
+                brTransferWeightsVolumeCheck;
+
+    frameLayout -edit
+                -collapseCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsSurfaceFrame\", 1)")
+                -expandCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsSurfaceFrame\", 0)")
+                brTransferWeightsSurfaceFrame;
+    frameLayout -edit
+                -collapseCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsVolumeFrame\", 1)")
+                -expandCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsVolumeFrame\", 0)")
+                brTransferWeightsVolumeFrame;
+    frameLayout -edit
+                -collapseCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsDisplayFrame\", 1)")
+                -expandCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsDisplayFrame\", 0)")
+                brTransferWeightsDisplayFrame;
+    frameLayout -edit
+                -collapseCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsAdvancedFrame\", 1)")
+                -expandCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsAdvancedFrame\", 0)")
+                brTransferWeightsAdvancedFrame;
+    frameLayout -edit
+                -collapseCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsHotkeyFrame\", 1)")
+                -expandCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsHotkeyFrame\", 0)")
+                brTransferWeightsHotkeyFrame;
+
+    button -edit -command brTransferWeightsSetAbsolute brTransferWeightsAbsoluteButton;
+
+    checkBoxGrp -edit
+                -changeCommand "optionVar -intValue \"brTransferWeightsHideAnnotations\" #1; brTransferWeightsToggleAnnotations;"
+                brTransferWeightsDisplayTipsCheck;
+}
+
+
+global proc brTransferWeightsProperties()
+{
+    setUITemplate -pushTemplate OptionsTemplate;
+
+    string $parent = `toolPropertyWindow -query -location`;
+    setParent $parent;
+
+    // The tool settings start with a column layout. It's important that
+    // the layout name matches the tool name.
+    columnLayout brTransferWeights;
+
+        frameLayout -label "General Settings"
+                    -labelIndent 3
+                    -collapsable 1
+                    -collapse 0
+                    -marginWidth 5
+                    -marginHeight 5
+                    brTransferWeightsFrame;
+
+            rowColumnLayout -numberOfColumns 5
+                            -columnWidth 1 135
+                            -columnOffset 1 "right" 8
+                            brTransferWeightsCurveColumn;
+                text -label "Curve" -align "right";
+                symbolCheckBox  -height 38
+                                -onImage "brSmoothWeightsNone.png"
+                                -offImage "brSmoothWeightsNoneOff.png"
+                                brTransferWeightsNoneButton;
+                symbolCheckBox  -height 38
+                                -onImage "brSmoothWeightsLinear.png"
+                                -offImage "brSmoothWeightsLinearOff.png"
+                                brTransferWeightsLinearButton;
+                symbolCheckBox  -height 38
+                                -onImage "brSmoothWeightsSmooth.png"
+                                -offImage "brSmoothWeightsSmoothOff.png"
+                                brTransferWeightsSmoothButton;
+                symbolCheckBox  -height 38
+                                -onImage "brSmoothWeightsNarrow.png"
+                                -offImage "brSmoothWeightsNarrowOff.png"
+                                brTransferWeightsNarrowButton;
+            setParent ..;
+
+            floatSliderGrp -label "Size"
+                           -precision 3
+                           -maxValue 100
+                           brTransferWeightsSize;
+            floatSliderGrp -label "Strength"
+                           -precision 3
+                           brTransferWeightsStrength;
+            checkBoxGrp -label "Affect Selected" brTransferWeightsAffectSelectedCheck;
+            checkBoxGrp -label "Replace" brTransferWeightsReplaceCheck;
+
+            rowColumnLayout -numberOfColumns 3
+                            -columnWidth 1 135
+                            -columnWidth 2 120
+                            -columnWidth 3 120
+                            -columnSpacing 3 5;
+                columnLayout; setParent .. ;
+                button -label "Flood" brTransferWeightsFloodButton;
+                button -label "Set Absolute" brTransferWeightsAbsoluteButton;
+            setParent .. ;
+
+            brTransferWeightsInfluenceList;
+
+            frameLayout -label "Surface Transfer"
+                        -labelIndent 3
+                        -collapsable 1
+                        -collapse (`optionVar -query "brTransferWeightsSurfaceFrameState"`)
+                        -marginWidth 5
+                        -marginHeight 5
+                        brTransferWeightsSurfaceFrame;
+
+                intSliderGrp -label "Depth Start"
+                             -minValue 1
+                             -maxValue 5
+                             brTransferWeightsDepthStart;
+                intSliderGrp -label "Depth"
+                             -minValue 1
+                             -maxValue 5
+                             brTransferWeightsDepth;
+                checkBoxGrp -label "Keep Shells Together" brTransferWeightsKeepShellsTogetherCheck;
+                floatSliderGrp -label "Tolerance"
+                               -precision 3
+                               -maxValue 1
+                               brTransferWeightsTolerance;
+
+            setParent .. ;
+
+            frameLayout -label "Volume Transfer"
+                        -labelIndent 3
+                        -collapsable 1
+                        -collapse (`optionVar -query "brTransferWeightsVolumeFrameState"`)
+                        -marginWidth 5
+                        -marginHeight 5
+                        brTransferWeightsVolumeFrame;
+
+                checkBoxGrp -label "Volume" brTransferWeightsVolumeCheck;
+
+            setParent ..;
+
+        setParent ..;
+
+        frameLayout -label "Display Options"
+                    -labelIndent 3
+                    -collapsable 1
+                    -collapse (`optionVar -query "brTransferWeightsDisplayFrameState"`)
+                    -marginWidth 5
+                    -marginHeight 5
+                    brTransferWeightsDisplayFrame;
+
+            checkBoxGrp -label "Draw Brush" brTransferWeightsDrawBrushCheck;
+            colorSliderGrp -label "Brush Color" brTransferWeightsBrushColorSlider;
+            intFieldGrp -label "Line Width" brTransferWeightsLineWidthField;
+
+            separator -style "none";
+
+            checkBoxGrp -label "In-View Message" brTransferWeightsMessageType;
+            checkBoxGrp -label "Tool Tips"
+                        -value1 `annotationsState`
+                        brTransferWeightsDisplayTipsCheck;
+
+        setParent ..;
+
+        frameLayout -label "Advanced"
+                    -labelIndent 3
+                    -collapsable 1
+                    -collapse (`optionVar -query "brTransferWeightsAdvancedFrameState"`)
+                    -marginWidth 5
+                    -marginHeight 5
+                    -manage (`optionVar -query brTransferWeightsEnableAdvanced`)
+                    brTransferWeightsAdvancedFrame;
+
+            intFieldGrp -label "Undersampling" brTransferWeightsBrushUndersamplingField;
+
+        setParent ..;
+
+        frameLayout -label "Hotkeys"
+                    -labelIndent 3
+                    -collapsable 1
+                    -collapse (`optionVar -query "brTransferWeightsHotkeyFrameState"`)
+                    -marginWidth 5
+                    -marginHeight 5
+                    brTransferWeightsHotkeyFrame;
+
+            rowColumnLayout -numberOfColumns 2
+                            -columnWidth 1 130
+                            -columnWidth 2 260
+                            -columnSpacing 2 10;
+
+                text -align "right" -font boldLabelFont -label "LMB:";
+                text -align "left" -label "Drag to transfer" -wordWrap true;
+
+                // For some reason the separation is off between the
+                // first and second row. Using the blank text as an
+                // invisible separator.
+                text -label "" -height 7;
+                text -label "" -height 7;
+
+                text -align "right" -font boldLabelFont -label "MMB:";
+                text -align "left" -label "Drag left/right to adjust brush size" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "MMB:";
+                text -align "left" -label "Drag up/down to adjust brush strength" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "Ctrl + MMB:";
+                text -align "left" -label "Fine control for adjusting size and strength" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "Shift + LMB:";
+                text -align "left" -label "Drag to select vertices" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "Ctrl + LMB:";
+                text -align "left" -label "Drag to deselect vertices" -wordWrap true;
+
+                text -align "right" -font boldLabelFont -label "Shift + Ctrl + LMB:";
+                text -align "left" -label "Click to clear vertex selection" -wordWrap true;
+
+            setParent ..;
+
+        setParent ..;
+
+    setParent ..;
+
+    setUITemplate -popTemplate;
+
+    brTransferWeightsSetCallbacks $parent;
+
+    brTransferWeightsToggleAnnotations;
+}
+
+// ---------------------------------------------------------------------
+// MIT License
+//
+// Copyright (c) 2018 Ingo Clemens, brave rabbit
+// brTransferWeights is under the terms of the MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Author: Ingo Clemens    www.braverabbit.com
+// ---------------------------------------------------------------------

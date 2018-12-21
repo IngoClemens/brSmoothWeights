@@ -1,15 +1,15 @@
 // ---------------------------------------------------------------------
 //
-//  smoothWeightsTool.h
-//  smoothWeightsTool
+//  transferWeightsTool.h
+//  transferWeightsTool
 //
-//  Created by ingo on 11/18/18.
+//  Created by ingo on 12/16/18.
 //  Copyright (c) 2018 Ingo Clemens. All rights reserved.
 //
 // ---------------------------------------------------------------------
 
-#ifndef __smoothWeightsTool__smoothWeightsTool__
-#define __smoothWeightsTool__smoothWeightsTool__
+#ifndef __transferWeightsTool__transferWeightsTool__
+#define __transferWeightsTool__transferWeightsTool__
 
 #include <iostream>
 #include <tbb/tbb.h>
@@ -49,12 +49,12 @@
 // the tool
 // ---------------------------------------------------------------------
 
-class smoothWeightsTool : public MPxToolCommand
+class transferWeightsTool : public MPxToolCommand
 {
 public:
 
-    smoothWeightsTool();
-    ~smoothWeightsTool();
+    transferWeightsTool();
+    ~transferWeightsTool();
 
     static void* creator();
     static MSyntax newSyntax();
@@ -74,18 +74,17 @@ public:
     void setCurve(int value);
     void setDepth(int value);
     void setDepthStart(int value);
+    void setDestinationInfluence(int value);
     void setDrawBrush(bool value);
-    void setDrawRange(bool value);
     void setEnterToolCommand(MString value);
     void setExitToolCommand(MString value);
-    void setFractionOversampling(bool value);
-    void setIgnoreLock(bool value);
     void setKeepShellsTogether(bool value);
     void setLineWidth(int value);
     void setMessage(int value);
-    void setOversampling(int value);
-    void setRange(double value);
+    void setReplace(bool value);
+    void setReverse(bool value);
     void setSize(double value);
+    void setSourceInfluence(int value);
     void setStrength(double value);
     void setTolerance(double value);
     void setUndersampling(int value);
@@ -108,18 +107,17 @@ private:
     int curveVal;
     int depthVal;
     int depthStartVal;
+    int destinationInfluenceVal;
     bool drawBrushVal;
-    bool drawRangeVal;
     MString enterToolCommandVal;
     MString exitToolCommandVal;
-    bool fractionOversamplingVal;
-    bool ignoreLockVal;
     bool keepShellsTogetherVal;
     int lineWidthVal;
     int messageVal;
-    int oversamplingVal;
-    double rangeVal;
+    bool replaceVal;
+    bool reverseVal;
     double sizeVal;
+    int sourceInfluenceVal;
     double strengthVal;
     double toleranceVal;
     int undersamplingVal;
@@ -143,11 +141,11 @@ private:
 // the context
 // ---------------------------------------------------------------------
 
-class smoothWeightsContext : public MPxContext
+class transferWeightsContext : public MPxContext
 {
 public:
 
-    smoothWeightsContext();
+    transferWeightsContext();
     void toolOnSetup(MEvent &event);
     void toolOffCleanup();
 
@@ -181,23 +179,21 @@ public:
     MStatus getSkinCluster(MDagPath meshDag, MObject &skinClusterObj);
     MStatus getAllWeights();
     void getSkinClusterAttributes(MObject skinCluster,
-                                  unsigned int &maxInfluences,
-                                  bool &maintainMaxInfluences,
                                   unsigned int &normalize);
     MIntArray getInfluenceIndices(MObject skinCluster, MDagPathArray &dagPaths);
     std::vector<bool> getInfluenceLocks(MDagPathArray dagPaths);
     bool getClosestIndex(MEvent event, MIntArray &indices, MFloatArray &distances);
 
-    // smooth computation
-    MStatus performSmooth(MEvent event, MIntArray indices, MFloatArray distances);
-    void setCurrentWeight(double value, unsigned int index, bool flood);
-    void computeWeights(unsigned int index,
-                        double falloff,
-                        int oppositeIndex,
-                        unsigned int element,
-                        int oppositeElement,
-                        MIntArray volumeIndices,
-                        bool flood);
+    // transfer computation
+    void resetTransferValues();
+    MStatus performTransfer(MEvent event, MIntArray indices, MFloatArray distances);
+    void computeTransfer(unsigned int index,
+                         double falloff,
+                         int oppositeIndex,
+                         unsigned int element,
+                         int oppositeElement,
+                         MIntArray volumeIndices,
+                         bool flood);
     // selection
     MStatus performSelect(MEvent event, MIntArray indices, MFloatArray distances);
     // flood
@@ -217,10 +213,6 @@ public:
                              int &oppositeIndex);
     void appendConnectedIndices(int index, MIntArray &indices);
     MIntArray getVerticesInVolume();
-    void getVerticesInVolumeRange(int index,
-                                  MIntArray volumeIndices,
-                                  MIntArray &rangeIndices,
-                                  MFloatArray &values);
 
     double getFalloffValue(double value, double strength);
     bool eventIsValid(MEvent event);
@@ -240,19 +232,18 @@ public:
     void setCurve(int value);
     void setDepth(int value);
     void setDepthStart(int value);
+    void setDestinationInfluence(int value);
     void setDrawBrush(bool value);
-    void setDrawRange(bool value);
     void setEnterToolCommand(MString value);
     void setExitToolCommand(MString value);
     void setFlood(double value);
-    void setFractionOversampling(bool value);
-    void setIgnoreLock(bool value);
     void setKeepShellsTogether(bool value);
     void setLineWidth(int value);
     void setMessage(int value);
-    void setOversampling(int value);
-    void setRange(double value);
+    void setReplace(bool value);
+    void setReverse(bool value);
     void setSize(double value);
+    void setSourceInfluence(int value);
     void setStrength(double value);
     void setTolerance(double value);
     void setUndersampling(int value);
@@ -266,18 +257,17 @@ public:
     int getCurve();
     int getDepth();
     int getDepthStart();
+    int getDestinationInfluence();
     bool getDrawBrush();
-    bool getDrawRange();
     MString getEnterToolCommand();
     MString getExitToolCommand();
-    bool getFractionOversampling();
-    bool getIgnoreLock();
     bool getKeepShellsTogether();
     int getLineWidth();
     int getMessage();
-    int getOversampling();
-    double getRange();
+    bool getReplace();
+    bool getReverse();
     double getSize();
+    int getSourceInfluence();
     double getStrength();
     double getTolerance();
     int getUndersampling();
@@ -285,7 +275,7 @@ public:
 
 private:
 
-    smoothWeightsTool *cmd;
+    transferWeightsTool *cmd;
 
     bool performBrush;
     int undersamplingSteps;
@@ -296,18 +286,17 @@ private:
     int curveVal;
     int depthVal;
     int depthStartVal;
+    int destinationInfluenceVal;
     bool drawBrushVal;
-    bool drawRangeVal;
     MString enterToolCommandVal;
     MString exitToolCommandVal;
-    bool fractionOversamplingVal;
-    bool ignoreLockVal;
     bool keepShellsTogetherVal;
     int lineWidthVal;
     int messageVal;
-    int oversamplingVal;
-    double rangeVal;
+    bool replaceVal;
+    bool reverseVal;
     double sizeVal;
+    int sourceInfluenceVal;
     double strengthVal;
     double toleranceVal;
     int undersamplingVal;
@@ -361,7 +350,7 @@ private:
                                         // true.
 
     MObject allVtxCompObj;
-    MObject smoothedCompObj;    // The single index component object for
+    MObject transferCompObj;    // The single index component object for
                                 // holding only the indices of the
                                 // current stroke for undo/redo.
 
@@ -371,16 +360,15 @@ private:
     MIntArray influenceIndices;
     MDagPathArray inflDagPaths;
     std::vector<bool> influenceLocks;
-    bool maintainMaxInfluences;
-    unsigned int maxInfluences;
     bool normalize;
 
-    MDoubleArray currentWeights;    // The array holding all weights.
-                                    // Unsmoothed and smoothed weights
-                                    // are included.
-    MDoubleArray prevWeights;       // The previous weights for undo.
-    MDoubleArray smoothedWeights;   // The array with only the smoothed
-                                    // weights.
+    MDoubleArray currentWeights;        // The array holding all weights.
+                                        // Original and transferred
+                                        // weights are included.
+    MDoubleArray prevWeights;           // The previous weights for undo.
+    MDoubleArray transferredWeights;    // The array with only the
+                                        // transferred weights.
+    MDoubleArray transferValues;
 
     MSelectionList prevSelection;
     MSelectionList prevHilite;
@@ -396,11 +384,11 @@ private:
 // command to create the context
 // ---------------------------------------------------------------------
 
-class smoothWeightsContextCmd : public MPxContextCommand
+class transferWeightsContextCmd : public MPxContextCommand
 {
 public:
 
-    smoothWeightsContextCmd();
+    transferWeightsContextCmd();
     MPxContext* makeObj();
     static void* creator();
     MStatus appendSyntax();
@@ -409,7 +397,7 @@ public:
 
 protected:
 
-    smoothWeightsContext* smoothContext;
+    transferWeightsContext* transferContext;
 };
 
 #endif
@@ -418,7 +406,7 @@ protected:
 // MIT License
 //
 // Copyright (c) 2018 Ingo Clemens, brave rabbit
-// brSmoothWeights is under the terms of the MIT License
+// brTransferWeights is under the terms of the MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the

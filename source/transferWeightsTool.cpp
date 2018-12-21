@@ -1,14 +1,14 @@
 // ---------------------------------------------------------------------
 //
-//  smoothWeightsTool.cpp
-//  smoothWeightsTool
+//  transferWeightsTool.cpp
+//  transferWeightsTool
 //
-//  Created by ingo on 11/18/18.
+//  Created by ingo on 12/16/18.
 //  Copyright (c) 2018 Ingo Clemens. All rights reserved.
 //
 // ---------------------------------------------------------------------
 
-#include "smoothWeightsTool.h"
+#include "transferWeightsTool.h"
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
 
@@ -20,42 +20,41 @@ const float DEGTORAD = 3.14159265359f / 180.0f;
 // general methods for the tool command
 // ---------------------------------------------------------------------
 
-smoothWeightsTool::smoothWeightsTool()
+transferWeightsTool::transferWeightsTool()
 {
-    setCommandString("brSmoothWeightsCmd");
+    setCommandString("brTransferWeightsCmd");
 
     affectSelectedVal = true;
     colorVal = MColor(0.0, 0.0, 0.0);
     curveVal = 2;
     depthVal = 1;
     depthStartVal = 1;
+    destinationInfluenceVal = -1;
     drawBrushVal = true;
-    drawRangeVal = true;
     enterToolCommandVal = "";
     exitToolCommandVal = "";
-    fractionOversamplingVal = false;
-    ignoreLockVal = false;
     keepShellsTogetherVal = true;
     lineWidthVal = 1;
     messageVal = 2;
-    oversamplingVal = 1;
-    rangeVal = 0.5;
+    replaceVal = false;
+    reverseVal = false;
     sizeVal = 5.0;
-    strengthVal = 0.25;
+    sourceInfluenceVal = -1;
+    strengthVal = 0.2;
     toleranceVal = 0.001;
     undersamplingVal = 2;
     volumeVal = false;
 }
 
-smoothWeightsTool::~smoothWeightsTool()
+transferWeightsTool::~transferWeightsTool()
 {}
 
-void* smoothWeightsTool::creator()
+void* transferWeightsTool::creator()
 {
-    return new smoothWeightsTool;
+    return new transferWeightsTool;
 }
 
-bool smoothWeightsTool::isUndoable() const
+bool transferWeightsTool::isUndoable() const
 {
     return true;
 }
@@ -87,32 +86,30 @@ bool smoothWeightsTool::isUndoable() const
 #define kDepthFlagLong                  "-depth"
 #define kDepthStartFlag                 "-ds"
 #define kDepthStartFlagLong             "-depthStart"
+#define kDestinationInfluenceFlag       "-di"
+#define kDestinationInfluenceFlagLong   "-destinationInfluence"
 #define kDrawBrushFlag                  "-db"
 #define kDrawBrushFlagLong              "-drawBrush"
-#define kDrawRangeFlag                  "-dr"
-#define kDrawRangeFlagLong              "-drawRange"
 #define kEnterToolCommandFlag           "-etc"
 #define kEnterToolCommandFlagLong       "-enterToolCommand"
 #define kExitToolCommandFlag            "-xtc"
 #define kExitToolCommandFlagLong        "-exitToolCommand"
 #define kFloodFlag                      "-f"
 #define kFloodFlagLong                  "-flood"
-#define kFractionOversamplingFlag       "-fo"
-#define kFractionOversamplingFlagLong   "-fractionOversampling"
-#define kIgnoreLockFlag                 "-il"
-#define kIgnoreLockFlagLong             "-ignoreLock"
 #define kKeepShellsTogetherFlag         "-kst"
 #define kKeepShellsTogetherFlagLong     "-keepShellsTogether"
 #define kLineWidthFlag                  "-lw"
 #define kLineWidthFlagLong              "-lineWidth"
 #define kMessageFlag                    "-m"
 #define kMessageFlagLong                "-message"
-#define kOversamplingFlag               "-o"
-#define kOversamplingFlagLong           "-oversampling"
-#define kRangeFlag                      "-r"
-#define kRangeFlagLong                  "-range"
+#define kReplaceFlag                    "-rep"
+#define kReplaceFlagLong                "-replace"
+#define kReverseFlag                    "-rev"
+#define kReverseFlagLong                "-reverse"
 #define kSizeFlag                       "-s"
 #define kSizeFlagLong                   "-size"
+#define kSourceInfluenceFlag            "-si"
+#define kSourceInfluenceFlagLong        "-sourceInfluence"
 #define kStrengthFlag                   "-st"
 #define kStrengthFlagLong               "-strength"
 #define kToleranceFlag                  "-to"
@@ -123,7 +120,7 @@ bool smoothWeightsTool::isUndoable() const
 #define kVolumeFlagLong                 "-volume"
 
 
-MSyntax smoothWeightsTool::newSyntax()
+MSyntax transferWeightsTool::newSyntax()
 {
     MSyntax syntax;
 
@@ -134,18 +131,17 @@ MSyntax smoothWeightsTool::newSyntax()
     syntax.addFlag(kCurveFlag, kCurveFlagLong, MSyntax::kLong);
     syntax.addFlag(kDepthFlag, kDepthFlagLong, MSyntax::kLong);
     syntax.addFlag(kDepthStartFlag, kDepthStartFlagLong, MSyntax::kLong);
+    syntax.addFlag(kDestinationInfluenceFlag, kDestinationInfluenceFlagLong, MSyntax::kLong);
     syntax.addFlag(kDrawBrushFlag, kDrawBrushFlagLong, MSyntax::kBoolean);
-    syntax.addFlag(kDrawRangeFlag, kDrawRangeFlagLong, MSyntax::kBoolean);
     syntax.addFlag(kEnterToolCommandFlag, kEnterToolCommandFlagLong, MSyntax::kString);
     syntax.addFlag(kExitToolCommandFlag, kExitToolCommandFlagLong, MSyntax::kString);
-    syntax.addFlag(kFractionOversamplingFlag, kFractionOversamplingFlagLong, MSyntax::kBoolean);
-    syntax.addFlag(kIgnoreLockFlag, kIgnoreLockFlagLong, MSyntax::kBoolean);
     syntax.addFlag(kKeepShellsTogetherFlag, kKeepShellsTogetherFlagLong, MSyntax::kBoolean);
     syntax.addFlag(kLineWidthFlag, kLineWidthFlagLong, MSyntax::kLong);
     syntax.addFlag(kMessageFlag, kMessageFlagLong, MSyntax::kLong);
-    syntax.addFlag(kOversamplingFlag, kOversamplingFlagLong, MSyntax::kLong);
-    syntax.addFlag(kRangeFlag, kRangeFlagLong, MSyntax::kDouble);
+    syntax.addFlag(kReplaceFlag, kReplaceFlagLong, MSyntax::kBoolean);
+    syntax.addFlag(kReverseFlag, kReverseFlagLong, MSyntax::kBoolean);
     syntax.addFlag(kSizeFlag, kSizeFlagLong, MSyntax::kDouble);
+    syntax.addFlag(kSourceInfluenceFlag, kSourceInfluenceFlagLong, MSyntax::kLong);
     syntax.addFlag(kStrengthFlag, kStrengthFlagLong, MSyntax::kDouble);
     syntax.addFlag(kToleranceFlag, kToleranceFlagLong, MSyntax::kDouble);
     syntax.addFlag(kUndersamplingFlag, kUndersamplingFlagLong, MSyntax::kLong);
@@ -155,7 +151,7 @@ MSyntax smoothWeightsTool::newSyntax()
 }
 
 
-MStatus smoothWeightsTool::parseArgs(const MArgList& args)
+MStatus transferWeightsTool::parseArgs(const MArgList& args)
 {
     MStatus status = MStatus::kSuccess;
 
@@ -202,14 +198,14 @@ MStatus smoothWeightsTool::parseArgs(const MArgList& args)
         status = argData.getFlagArgument(kDepthStartFlag, 0, depthStartVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
+    if (argData.isFlagSet(kDestinationInfluenceFlag))
+    {
+        status = argData.getFlagArgument(kDestinationInfluenceFlag, 0, destinationInfluenceVal);
+        CHECK_MSTATUS_AND_RETURN_IT(status);
+    }
     if (argData.isFlagSet(kDrawBrushFlag))
     {
         status = argData.getFlagArgument(kDrawBrushFlag, 0, drawBrushVal);
-        CHECK_MSTATUS_AND_RETURN_IT(status);
-    }
-    if (argData.isFlagSet(kDrawRangeFlag))
-    {
-        status = argData.getFlagArgument(kDrawRangeFlag, 0, drawRangeVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
     if (argData.isFlagSet(kEnterToolCommandFlag))
@@ -220,16 +216,6 @@ MStatus smoothWeightsTool::parseArgs(const MArgList& args)
     if (argData.isFlagSet(kExitToolCommandFlag))
     {
         status = argData.getFlagArgument(kExitToolCommandFlag, 0, exitToolCommandVal);
-        CHECK_MSTATUS_AND_RETURN_IT(status);
-    }
-    if (argData.isFlagSet(kFractionOversamplingFlag))
-    {
-        status = argData.getFlagArgument(kFractionOversamplingFlag, 0, fractionOversamplingVal);
-        CHECK_MSTATUS_AND_RETURN_IT(status);
-    }
-    if (argData.isFlagSet(kIgnoreLockFlag))
-    {
-        status = argData.getFlagArgument(kIgnoreLockFlag, 0, ignoreLockVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
     if (argData.isFlagSet(kKeepShellsTogetherFlag))
@@ -247,19 +233,24 @@ MStatus smoothWeightsTool::parseArgs(const MArgList& args)
         status = argData.getFlagArgument(kMessageFlag, 0, messageVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
-    if (argData.isFlagSet(kOversamplingFlag))
+    if (argData.isFlagSet(kReplaceFlag))
     {
-        status = argData.getFlagArgument(kOversamplingFlag, 0, oversamplingVal);
+        status = argData.getFlagArgument(kReplaceFlag, 0, replaceVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
-    if (argData.isFlagSet(kRangeFlag))
+    if (argData.isFlagSet(kReverseFlag))
     {
-        status = argData.getFlagArgument(kRangeFlag, 0, rangeVal);
+        status = argData.getFlagArgument(kReverseFlag, 0, reverseVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
     if (argData.isFlagSet(kSizeFlag))
     {
         status = argData.getFlagArgument(kSizeFlag, 0, sizeVal);
+        CHECK_MSTATUS_AND_RETURN_IT(status);
+    }
+    if (argData.isFlagSet(kSourceInfluenceFlag))
+    {
+        status = argData.getFlagArgument(kSourceInfluenceFlag, 0, sourceInfluenceVal);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
     if (argData.isFlagSet(kStrengthFlag))
@@ -291,7 +282,7 @@ MStatus smoothWeightsTool::parseArgs(const MArgList& args)
 // main methods for the tool command
 // ---------------------------------------------------------------------
 
-MStatus smoothWeightsTool::doIt(const MArgList &args)
+MStatus transferWeightsTool::doIt(const MArgList &args)
 {
     MStatus status = MStatus::kSuccess;
 
@@ -302,7 +293,7 @@ MStatus smoothWeightsTool::doIt(const MArgList &args)
 }
 
 
-MStatus smoothWeightsTool::redoIt()
+MStatus transferWeightsTool::redoIt()
 {
     MStatus status = MStatus::kSuccess;
 
@@ -321,7 +312,7 @@ MStatus smoothWeightsTool::redoIt()
 }
 
 
-MStatus smoothWeightsTool::undoIt()
+MStatus transferWeightsTool::undoIt()
 {
     MStatus status = MStatus::kSuccess;
 
@@ -335,7 +326,7 @@ MStatus smoothWeightsTool::undoIt()
     if (undoWeights.length())
     {
         // Applying the previous weights to the entire mesh to undo the
-        // smoothing can be slow with dense meshes. Instead only the
+        // transfer can be slow with dense meshes. Instead only the
         // modified indices are set back to the previous weighting.
         // Since the array with the former weights contains the
         // weighting for all vertices, it's necessary to create a new
@@ -389,14 +380,14 @@ MStatus smoothWeightsTool::undoIt()
 }
 
 
-MStatus smoothWeightsTool::finalize()
+MStatus transferWeightsTool::finalize()
 {
     // Store the current settings as an option var. This way they are
     // properly available for the next usage.
 
     MString cmd;
-    cmd = "brSmoothWeightsContext -edit ";
-    cmd += "-image1 \"brSmoothWeights.svg\" -image2 \"vacantCell.png\" -image3 \"vacantCell.png\"";
+    cmd = "brTransferWeightsContext -edit ";
+    cmd += "-image1 \"brTransferWeights.svg\" -image2 \"vacantCell.png\" -image3 \"vacantCell.png\"";
     cmd += " " + MString(kAffectSelectedFlag) + " ";
     cmd += affectSelectedVal;
     cmd += " " + MString(kColorRFlag) + " ";
@@ -411,30 +402,28 @@ MStatus smoothWeightsTool::finalize()
     cmd += depthVal;
     cmd += " " + MString(kDepthStartFlag) + " ";
     cmd += depthStartVal;
+    cmd += " " + MString(kDestinationInfluenceFlag) + " ";
+    cmd += destinationInfluenceVal;
     cmd += " " + MString(kDrawBrushFlag) + " ";
     cmd += drawBrushVal;
-    cmd += " " + MString(kDrawRangeFlag) + " ";
-    cmd += drawRangeVal;
     cmd += " " + MString(kEnterToolCommandFlag) + " ";
     cmd += "\"" + enterToolCommandVal + "\"";
     cmd += " " + MString(kExitToolCommandFlag) + " ";
     cmd += "\"" + exitToolCommandVal + "\"";
-    cmd += " " + MString(kFractionOversamplingFlag) + " ";
-    cmd += fractionOversamplingVal;
-    cmd += " " + MString(kIgnoreLockFlag) + " ";
-    cmd += ignoreLockVal;
     cmd += " " + MString(kKeepShellsTogetherFlag) + " ";
     cmd += keepShellsTogetherVal;
     cmd += " " + MString(kLineWidthFlag) + " ";
     cmd += lineWidthVal;
     cmd += " " + MString(kMessageFlag) + " ";
     cmd += messageVal;
-    cmd += " " + MString(kOversamplingFlag) + " ";
-    cmd += oversamplingVal;
-    cmd += " " + MString(kRangeFlag) + " ";
-    cmd += rangeVal;
+    cmd += " " + MString(kReplaceFlag) + " ";
+    cmd += replaceVal;
+    cmd += " " + MString(kReverseFlag) + " ";
+    cmd += reverseVal;
     cmd += " " + MString(kSizeFlag) + " ";
     cmd += sizeVal;
+    cmd += " " + MString(kSourceInfluenceFlag) + " ";
+    cmd += sourceInfluenceVal;
     cmd += " " + MString(kStrengthFlag) + " ";
     cmd += strengthVal;
     cmd += " " + MString(kToleranceFlag) + " ";
@@ -443,9 +432,9 @@ MStatus smoothWeightsTool::finalize()
     cmd += undersamplingVal;
     cmd += " " + MString(kVolumeFlag) + " ";
     cmd += volumeVal;
-    cmd += " brSmoothWeightsContext1;";
+    cmd += " brTransferWeightsContext1;";
 
-    MGlobal::setOptionVarValue("brSmoothWeightsContext1", cmd);
+    MGlobal::setOptionVarValue("brTransferWeightsContext1", cmd);
 
     // Finalize the command by adding it to the undo queue and the
     // journal.
@@ -460,127 +449,121 @@ MStatus smoothWeightsTool::finalize()
 // getting values from the command flags
 // ---------------------------------------------------------------------
 
-void smoothWeightsTool::setAffectSelected(bool value)
+void transferWeightsTool::setAffectSelected(bool value)
 {
     affectSelectedVal = value;
 }
 
 
-void smoothWeightsTool::setColor(MColor value)
+void transferWeightsTool::setColor(MColor value)
 {
     colorVal = value;
 }
 
 
-void smoothWeightsTool::setCurve(int value)
+void transferWeightsTool::setCurve(int value)
 {
     curveVal = value;
 }
 
 
-void smoothWeightsTool::setDepth(int value)
+void transferWeightsTool::setDepth(int value)
 {
     depthVal = value;
 }
 
 
-void smoothWeightsTool::setDepthStart(int value)
+void transferWeightsTool::setDepthStart(int value)
 {
     depthStartVal = value;
 }
 
 
-void smoothWeightsTool::setDrawBrush(bool value)
+void transferWeightsTool::setDestinationInfluence(int value)
+{
+    destinationInfluenceVal = value;
+}
+
+
+void transferWeightsTool::setDrawBrush(bool value)
 {
     drawBrushVal = value;
 }
 
 
-void smoothWeightsTool::setDrawRange(bool value)
-{
-    drawRangeVal = value;
-}
-
-
-void smoothWeightsTool::setEnterToolCommand(MString value)
+void transferWeightsTool::setEnterToolCommand(MString value)
 {
     enterToolCommandVal = value;
 }
 
 
-void smoothWeightsTool::setExitToolCommand(MString value)
+void transferWeightsTool::setExitToolCommand(MString value)
 {
     exitToolCommandVal = value;
 }
 
 
-void smoothWeightsTool::setFractionOversampling(bool value)
-{
-    fractionOversamplingVal = value;
-}
-
-
-void smoothWeightsTool::setIgnoreLock(bool value)
-{
-    ignoreLockVal = value;
-}
-
-
-void smoothWeightsTool::setKeepShellsTogether(bool value)
+void transferWeightsTool::setKeepShellsTogether(bool value)
 {
     keepShellsTogetherVal = value;
 }
 
 
-void smoothWeightsTool::setLineWidth(int value)
+void transferWeightsTool::setLineWidth(int value)
 {
     lineWidthVal = value;
 }
 
 
-void smoothWeightsTool::setMessage(int value)
+void transferWeightsTool::setMessage(int value)
 {
     messageVal = value;
 }
 
 
-void smoothWeightsTool::setOversampling(int value)
+void transferWeightsTool::setReplace(bool value)
 {
-    oversamplingVal = value;
+    replaceVal = value;
 }
 
 
-void smoothWeightsTool::setRange(double value)
+void transferWeightsTool::setReverse(bool value)
 {
-    rangeVal = value;
+    reverseVal = value;
 }
 
 
-void smoothWeightsTool::setSize(double value)
+void transferWeightsTool::setSize(double value)
 {
     sizeVal = value;
 }
 
 
-void smoothWeightsTool::setStrength(double value)
+void transferWeightsTool::setSourceInfluence(int value)
+{
+    sourceInfluenceVal = value;
+}
+
+
+void transferWeightsTool::setStrength(double value)
 {
     strengthVal = value;
 }
 
 
-void smoothWeightsTool::setTolerance(double value)
+void transferWeightsTool::setTolerance(double value)
 {
     toleranceVal = value;
 }
 
 
-void smoothWeightsTool::setUndersampling(int value)
+void transferWeightsTool::setUndersampling(int value)
 {
     undersamplingVal = value;
 }
 
 
-void smoothWeightsTool::setVolume(bool value)
+void transferWeightsTool::setVolume(bool value)
 {
     volumeVal = value;
 }
@@ -590,44 +573,44 @@ void smoothWeightsTool::setVolume(bool value)
 // public methods for setting the undo/redo variables
 // ---------------------------------------------------------------------
 
-void smoothWeightsTool::setInfluenceIndices(MIntArray indices)
+void transferWeightsTool::setInfluenceIndices(MIntArray indices)
 {
     influenceIndices = indices;
 }
 
 
-void smoothWeightsTool::setMesh(MDagPath dagPath)
+void transferWeightsTool::setMesh(MDagPath dagPath)
 {
     meshDag = dagPath;
 }
 
 
-void smoothWeightsTool::setNormalize(bool value)
+void transferWeightsTool::setNormalize(bool value)
 {
     normalize = value;
 }
 
 
-void smoothWeightsTool::setSelection(MSelectionList selection, MSelectionList hilite)
+void transferWeightsTool::setSelection(MSelectionList selection, MSelectionList hilite)
 {
     undoSelection = selection;
     undoHilite = hilite;
 }
 
 
-void smoothWeightsTool::setSkinCluster(MObject skinCluster)
+void transferWeightsTool::setSkinCluster(MObject skinCluster)
 {
     skinObj = skinCluster;
 }
 
 
-void smoothWeightsTool::setVertexComponents(MObject components)
+void transferWeightsTool::setVertexComponents(MObject components)
 {
     vertexComponents = components;
 }
 
 
-void smoothWeightsTool::setWeights(MDoubleArray weights)
+void transferWeightsTool::setWeights(MDoubleArray weights)
 {
     undoWeights = weights;
 }
@@ -637,17 +620,17 @@ void smoothWeightsTool::setWeights(MDoubleArray weights)
 // the context
 // ---------------------------------------------------------------------
 
-const char helpString[] = "Smooth skin cluster weights by averaging neighbouring weights.";
+const char helpString[] = "Transfer weights from one influence to another.";
 
 
 // ---------------------------------------------------------------------
 // general methods when calling the context
 // ---------------------------------------------------------------------
 
-smoothWeightsContext::smoothWeightsContext()
+transferWeightsContext::transferWeightsContext()
 {
-    setTitleString("Smooth Weights");
-    setImage("brSmoothWeights.svg", MPxContext::kImage1);
+    setTitleString("Transfer Weights");
+    setImage("brTransferWeights.svg", MPxContext::kImage1);
     setCursor(MCursor::editCursor);
 
     // Define the default values for the context.
@@ -658,31 +641,30 @@ smoothWeightsContext::smoothWeightsContext()
     curveVal = 2;
     depthVal = 1;
     depthStartVal = 1;
+    destinationInfluenceVal = -1;
     drawBrushVal = true;
-    drawRangeVal = true;
     enterToolCommandVal = "";
     exitToolCommandVal = "";
-    fractionOversamplingVal = false;
-    ignoreLockVal = false;
     keepShellsTogetherVal = true;
     lineWidthVal = 1;
     messageVal = 2;
-    oversamplingVal = 1;
-    rangeVal = 0.5;
+    replaceVal = false;
+    reverseVal = false;
     sizeVal = 5.0;
-    strengthVal = 0.25;
+    sourceInfluenceVal = -1;
+    strengthVal = 0.2;
     toleranceVal = 0.001;
     undersamplingVal = 2;
     volumeVal = false;
 
-    // True, only if the smoothing is performed. False when adjusting
+    // True, only if the transfer is performed. False when adjusting
     // the brush settings. It's used to control whether undo/redo needs
     // to get called.
     performBrush = false;
 }
 
 
-void smoothWeightsContext::toolOnSetup(MEvent &)
+void transferWeightsContext::toolOnSetup(MEvent &)
 {
     setHelpString(helpString);
 
@@ -694,7 +676,7 @@ void smoothWeightsContext::toolOnSetup(MEvent &)
 }
 
 
-void smoothWeightsContext::toolOffCleanup()
+void transferWeightsContext::toolOffCleanup()
 {
     setInViewMessage(false);
 
@@ -702,9 +684,9 @@ void smoothWeightsContext::toolOffCleanup()
 }
 
 
-void smoothWeightsContext::getClassName(MString &name) const
+void transferWeightsContext::getClassName(MString &name) const
 {
-    name.set("brSmoothWeights");
+    name.set("brTransferWeights");
 }
 
 
@@ -712,7 +694,7 @@ void smoothWeightsContext::getClassName(MString &name) const
 // legacy viewport
 // ---------------------------------------------------------------------
 
-MStatus smoothWeightsContext::doPress(MEvent &event)
+MStatus transferWeightsContext::doPress(MEvent &event)
 {
     selectionStatus = doPressCommon(event);
     CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
@@ -722,7 +704,7 @@ MStatus smoothWeightsContext::doPress(MEvent &event)
 }
 
 
-MStatus smoothWeightsContext::doDrag(MEvent &event)
+MStatus transferWeightsContext::doDrag(MEvent &event)
 {
     CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
 
@@ -761,16 +743,12 @@ MStatus smoothWeightsContext::doDrag(MEvent &event)
             if (sizeAdjust)
             {
                 drawCircle(surfacePointAdjust, viewMat, adjustValue);
-                if (volumeVal && drawRangeVal)
-                    drawCircle(surfacePointAdjust, viewMat, adjustValue * rangeVal);
             }
             // When adjusting the strength the circle needs to remain
             // fixed and only the strength indicator changes.
             else
             {
                 drawCircle(surfacePointAdjust, viewMat, sizeVal);
-                if (volumeVal && drawRangeVal)
-                    drawCircle(surfacePointAdjust, viewMat, sizeVal * rangeVal);
 
                 // Drawing the strength line is not properly working in
                 // this implementation. But since the legacy viewport
@@ -793,7 +771,7 @@ MStatus smoothWeightsContext::doDrag(MEvent &event)
 }
 
 
-void smoothWeightsContext::drawCircle(MPoint point, MMatrix mat, double radius)
+void transferWeightsContext::drawCircle(MPoint point, MMatrix mat, double radius)
 {
     unsigned int i;
 
@@ -811,7 +789,7 @@ void smoothWeightsContext::drawCircle(MPoint point, MMatrix mat, double radius)
 }
 
 
-MStatus smoothWeightsContext::doRelease(MEvent &event)
+MStatus transferWeightsContext::doRelease(MEvent &event)
 {
     CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
 
@@ -824,9 +802,9 @@ MStatus smoothWeightsContext::doRelease(MEvent &event)
 // viewport 2.0
 // ---------------------------------------------------------------------
 
-MStatus smoothWeightsContext::doPress(MEvent &event,
-                                      MHWRender::MUIDrawManager &drawMgr,
-                                      const MHWRender::MFrameContext &context)
+MStatus transferWeightsContext::doPress(MEvent &event,
+                                        MHWRender::MUIDrawManager &drawMgr,
+                                        const MHWRender::MFrameContext &context)
 {
     selectionStatus = doPressCommon(event);
     CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
@@ -836,9 +814,9 @@ MStatus smoothWeightsContext::doPress(MEvent &event,
 }
 
 
-MStatus smoothWeightsContext::doDrag(MEvent &event,
-                                     MHWRender::MUIDrawManager &drawManager,
-                                     const MHWRender::MFrameContext &context)
+MStatus transferWeightsContext::doDrag(MEvent &event,
+                                       MHWRender::MUIDrawManager &drawManager,
+                                       const MHWRender::MFrameContext &context)
 {
     CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
 
@@ -874,16 +852,12 @@ MStatus smoothWeightsContext::doDrag(MEvent &event,
             if (sizeAdjust)
             {
                 drawManager.circle(surfacePointAdjust, worldVectorAdjust, adjustValue);
-                if (volumeVal && drawRangeVal)
-                    drawManager.circle(surfacePointAdjust, worldVectorAdjust, adjustValue * rangeVal);
             }
             // When adjusting the strength the circle needs to remain
             // fixed and only the strength indicator changes.
             else
             {
                 drawManager.circle(surfacePointAdjust, worldVectorAdjust, sizeVal);
-                if (volumeVal && drawRangeVal)
-                    drawManager.circle(surfacePointAdjust, worldVectorAdjust, sizeVal * rangeVal);
 
                 MPoint start(startScreenX, startScreenY);
                 MPoint end(startScreenX, startScreenY + adjustValue * 500);
@@ -900,9 +874,9 @@ MStatus smoothWeightsContext::doDrag(MEvent &event,
 }
 
 
-MStatus smoothWeightsContext::doRelease(MEvent &event,
-                                        MHWRender::MUIDrawManager &drawMgr,
-                                        const MHWRender::MFrameContext &context)
+MStatus transferWeightsContext::doRelease(MEvent &event,
+                                          MHWRender::MUIDrawManager &drawMgr,
+                                          const MHWRender::MFrameContext &context)
 {
     CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
 
@@ -915,7 +889,7 @@ MStatus smoothWeightsContext::doRelease(MEvent &event,
 // common methods for legacy viewport and viewport 2.0
 // ---------------------------------------------------------------------
 
-MStatus smoothWeightsContext::doPressCommon(MEvent event)
+MStatus transferWeightsContext::doPressCommon(MEvent event)
 {
     MStatus status = MStatus::kSuccess;
 
@@ -1041,16 +1015,19 @@ MStatus smoothWeightsContext::doPressCommon(MEvent event)
         else
             getAllWeights();
     }
+
+    resetTransferValues();
+
     return status;
 }
 
 
-MStatus smoothWeightsContext::doDragCommon(MEvent event)
+MStatus transferWeightsContext::doDragCommon(MEvent event)
 {
     MStatus status = MStatus::kSuccess;
 
     // Skip several evaluation steps. This has several reasons:
-    // - It reduces the smoothing strength because not every evaluation
+    // - It reduces the transfer strength because not every evaluation
     //   triggers a calculation.
     // - It lets adjusting the brush appear smoother because the lines
     //   show less flicker.
@@ -1062,7 +1039,7 @@ MStatus smoothWeightsContext::doDragCommon(MEvent event)
     undersamplingSteps = 0;
 
     // -----------------------------------------------------------------
-    // Dragging with the left mouse button performs the smoothing.
+    // Dragging with the left mouse button performs the transfer.
     // -----------------------------------------------------------------
     if (event.mouseButton() == MEvent::kLeftMouse)
     {
@@ -1073,7 +1050,7 @@ MStatus smoothWeightsContext::doDragCommon(MEvent event)
 
         if (event.isModifierNone())
         {
-            performSmooth(event, closestIndices, closestDistances);
+            performTransfer(event, closestIndices, closestDistances);
             performBrush = true;
         }
         else
@@ -1183,7 +1160,7 @@ MStatus smoothWeightsContext::doDragCommon(MEvent event)
 
         // Also, adjust the slider in the tool settings window if it's
         // currently open.
-        MString tool("brSmoothWeights");
+        MString tool("brTransferWeights");
         MGlobal::executeCommand("if (`columnLayout -exists " + tool + "`) " +
                                 "floatSliderGrp -edit -value " + (MString() + adjustValue) + " " +
                                 tool + slider + ";");
@@ -1193,7 +1170,7 @@ MStatus smoothWeightsContext::doDragCommon(MEvent event)
 }
 
 
-void smoothWeightsContext::doReleaseCommon(MEvent event)
+void transferWeightsContext::doReleaseCommon(MEvent event)
 {
     // Don't continue if no mesh has been set.
     if (meshFn.object().isNull())
@@ -1213,30 +1190,29 @@ void smoothWeightsContext::doReleaseCommon(MEvent event)
     // always be necessary but is just included to complete the process.
     view.refresh(false, true);
 
-    // If the smoothing has been performed send the current values to
+    // If the transfer has been performed send the current values to
     // the tool command along with the necessary data for undo and redo.
     // The same goes for the select mode.
     if (performBrush)
     {
-        cmd = (smoothWeightsTool*)newToolCommand();
+        cmd = (transferWeightsTool*)newToolCommand();
 
         cmd->setAffectSelected(affectSelectedVal);
         cmd->setColor(colorVal);
         cmd->setCurve(curveVal);
         cmd->setDepth(depthVal);
         cmd->setDepthStart(depthStartVal);
+        cmd->setDestinationInfluence(destinationInfluenceVal);
         cmd->setDrawBrush(drawBrushVal);
-        cmd->setDrawRange(drawRangeVal);
         cmd->setEnterToolCommand(enterToolCommandVal);
         cmd->setExitToolCommand(exitToolCommandVal);
-        cmd->setFractionOversampling(fractionOversamplingVal);
-        cmd->setIgnoreLock(ignoreLockVal);
         cmd->setKeepShellsTogether(keepShellsTogetherVal);
         cmd->setLineWidth(lineWidthVal);
         cmd->setMessage(messageVal);
-        cmd->setOversampling(oversamplingVal);
-        cmd->setRange(rangeVal);
+        cmd->setReplace(replaceVal);
+        cmd->setReverse(reverseVal);
         cmd->setSize(sizeVal);
+        cmd->setSourceInfluence(sourceInfluenceVal);
         cmd->setStrength(strengthVal);
         cmd->setTolerance(toleranceVal);
         cmd->setUndersampling(undersamplingVal);
@@ -1245,7 +1221,7 @@ void smoothWeightsContext::doReleaseCommon(MEvent event)
         cmd->setMesh(meshDag);
         cmd->setSkinCluster(skinObj);
         cmd->setInfluenceIndices(influenceIndices);
-        cmd->setVertexComponents(smoothedCompObj);
+        cmd->setVertexComponents(transferCompObj);
         cmd->setWeights(prevWeights);
         cmd->setNormalize(normalize);
 
@@ -1253,7 +1229,7 @@ void smoothWeightsContext::doReleaseCommon(MEvent event)
 
         // Regular context implementations usually call
         // (MPxToolCommand)::redoIt at this point but in this case it
-        // is not necessary since the the smoothing already has been
+        // is not necessary since the the transfer already has been
         // performed. There is no need to apply the values twice.
 
         cmd->finalize();
@@ -1265,7 +1241,7 @@ void smoothWeightsContext::doReleaseCommon(MEvent event)
 // brush methods
 // ---------------------------------------------------------------------
 
-MStatus smoothWeightsContext::getMesh()
+MStatus transferWeightsContext::getMesh()
 {
     MStatus status = MStatus::kSuccess;
 
@@ -1275,10 +1251,10 @@ MStatus smoothWeightsContext::getMesh()
 
     // Clear the weights arrays. Especially the prevWeights array since
     // this stores the weights for undo. Since the prevWeights are only
-    // collected when smoothing and not in select mode this would cause
-    // wrong undo weights when switching meshes. When the tool gets
-    // reactivated after a tool change the undo method would still refer
-    // to the undo weights from the previous mesh. Therefore it's
+    // collected when transferring and not in select mode this would
+    // cause wrong undo weights when switching meshes. When the tool
+    // gets reactivated after a tool change the undo method would still
+    // refer to the undo weights from the previous mesh. Therefore it's
     // necessary to remove all previous weights when the tool changes.
     currentWeights.clear();
     prevWeights.clear();
@@ -1326,22 +1302,25 @@ MStatus smoothWeightsContext::getMesh()
 
     // Create a component object representing only the modified
     // vertices. This is needed to improve performance for undo/redo.
-    // See smoothWeightsTool::undoIt() for more information.
+    // See transferWeightsTool::undoIt() for more information.
     MFnSingleIndexedComponent compFn;
-    smoothedCompObj = compFn.create(MFn::kMeshVertComponent);
+    transferCompObj = compFn.create(MFn::kMeshVertComponent);
 
     // Get the indices of all influences.
     influenceIndices = getInfluenceIndices(skinObj, inflDagPaths);
 
     // Get the skin cluster settings.
     unsigned int normalizeValue;
-    getSkinClusterAttributes(skinClusterObj,
-                             maxInfluences,
-                             maintainMaxInfluences,
-                             normalizeValue);
+    getSkinClusterAttributes(skinClusterObj, normalizeValue);
     normalize = false;
     if (normalizeValue > 0)
         normalize = true;
+
+    // -----------------------------------------------------------------
+    // transfer factor
+    // -----------------------------------------------------------------
+
+    resetTransferValues();
 
     return status;
 }
@@ -1361,7 +1340,7 @@ MStatus smoothWeightsContext::getMesh()
 //      MStatus             Return kNotFound if nothing is selected or
 //                          the selection is not a mesh.
 //
-MStatus smoothWeightsContext::getSelection(MDagPath &dagPath)
+MStatus transferWeightsContext::getSelection(MDagPath &dagPath)
 {
     MStatus status = MStatus::kSuccess;
 
@@ -1375,7 +1354,7 @@ MStatus smoothWeightsContext::getSelection(MDagPath &dagPath)
 
     // Get the dagPath of the mesh before evaluating any selected
     // components. If there are no components selected the dagPath would
-    // be empty and the command would fail to apply the smoothing to the
+    // be empty and the command would fail to apply the transfer to the
     // entire mesh.
     sel.getDagPath(0, dagPath);
     status = dagPath.extendToShape();
@@ -1427,7 +1406,7 @@ MStatus smoothWeightsContext::getSelection(MDagPath &dagPath)
 // Return Value:
 //      The array of selected vertex indices
 //
-MIntArray smoothWeightsContext::getSelectionVertices()
+MIntArray transferWeightsContext::getSelectionVertices()
 {
     unsigned int i;
 
@@ -1503,7 +1482,7 @@ MIntArray smoothWeightsContext::getSelectionVertices()
 //      MStatus             The MStatus for the setting up the
 //                          dependency graph iterator.
 //
-MStatus smoothWeightsContext::getSkinCluster(MDagPath meshDag, MObject &skinClusterObj)
+MStatus transferWeightsContext::getSkinCluster(MDagPath meshDag, MObject &skinClusterObj)
 {
     MStatus status;
 
@@ -1546,7 +1525,7 @@ MStatus smoothWeightsContext::getSkinCluster(MDagPath meshDag, MObject &skinClus
 // Return Value:
 //      MStatus             The MStatus for creating the MFnSkinCluster.
 //
-MStatus smoothWeightsContext::getAllWeights()
+MStatus transferWeightsContext::getAllWeights()
 {
     MStatus status = MStatus::kSuccess;
 
@@ -1567,27 +1546,15 @@ MStatus smoothWeightsContext::getAllWeights()
 //
 // Input Arguments:
 //      skinCluster             The MObject of the skin cluster node.
-//      maxInfluences           The max number of influences per vertex.
-//      maintainMaxInfluences   True, if the max influences count should
-//                              be maintained.
 //      normalize               True, if the weights are normalized.
 //
 // Return Value:
 //      None
 //
-void smoothWeightsContext::getSkinClusterAttributes(MObject skinCluster,
-                                                    unsigned int &maxInfluences,
-                                                    bool &maintainMaxInfluences,
-                                                    unsigned int &normalize)
+void transferWeightsContext::getSkinClusterAttributes(MObject skinCluster, unsigned int &normalize)
 {
     // Get the settings from the skin cluster node.
     MFnDependencyNode skinMFn(skinCluster);
-
-    MPlug maxInflPlug = skinMFn.findPlug("maxInfluences");
-    maxInfluences = (unsigned)maxInflPlug.asInt();
-
-    MPlug maintainInflPlug = skinMFn.findPlug("maintainMaxInfluences");
-    maintainMaxInfluences = maintainInflPlug.asBool();
 
     MPlug normalizePlug = skinMFn.findPlug("normalizeWeights");
     normalize = (unsigned)normalizePlug.asInt();
@@ -1601,11 +1568,12 @@ void smoothWeightsContext::getSkinClusterAttributes(MObject skinCluster,
 //
 // Input Arguments:
 //      skinCluster         The MObject of the skin cluster node.
+//      dagPaths            The dagPath array of all influences.
 //
 // Return Value:
 //      int array           The array of all influence indices.
 //
-MIntArray smoothWeightsContext::getInfluenceIndices(MObject skinCluster, MDagPathArray &dagPaths)
+MIntArray transferWeightsContext::getInfluenceIndices(MObject skinCluster, MDagPathArray &dagPaths)
 {
     unsigned int i;
 
@@ -1631,7 +1599,7 @@ MIntArray smoothWeightsContext::getInfluenceIndices(MObject skinCluster, MDagPat
 // Return Value:
 //      bool array          The array of all influence lock states.
 //
-std::vector<bool> smoothWeightsContext::getInfluenceLocks(MDagPathArray dagPaths)
+std::vector<bool> transferWeightsContext::getInfluenceLocks(MDagPathArray dagPaths)
 {
     unsigned int i;
 
@@ -1670,7 +1638,7 @@ std::vector<bool> smoothWeightsContext::getInfluenceLocks(MDagPathArray dagPaths
 // Return Value:
 //      bool                True, if intersections have been found.
 //
-bool smoothWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFloatArray &distances)
+bool transferWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFloatArray &distances)
 {
     unsigned int i, j;
 
@@ -1680,11 +1648,11 @@ bool smoothWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFl
 
     // Note: MMeshIsectAccelParams is not used on purpose to speed up
     // the search for intersections. In particular cases (i.e. bend
-    // elbow with rigid weighting to smooth) the acceleration sometimes
-    // failed to detect the foremost intersection and instead returned
-    // the surface behind it as the first intersection causing the
-    // smoothing to appear on the back side of the mesh. Therefore the
-    // acceleration has been disabled.
+    // elbow with rigid weighting) the acceleration sometimes failed to
+    // detect the foremost intersection and instead returned the surface
+    // behind it as the first intersection causing the transfer to
+    // appear on the back side of the mesh. Therefore the acceleration
+    // has been disabled.
 
     MFloatPointArray hitPoints;
     MFloatArray hitRayParams;
@@ -1729,7 +1697,7 @@ bool smoothWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFl
         numHits = maxDepth;
 
     // In volume mode only the first hit it required to make sure that
-    // the smoothing loop only runs once.
+    // the transfer loop only runs once.
     if (volumeVal)
         numHits = 1;
 
@@ -1785,6 +1753,23 @@ bool smoothWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFl
 
 //
 // Description:
+//      Reset the current transfer values when the influence pair
+//      changes.
+//
+// Input Arguments:
+//      None
+//
+// Return Value:
+//      None
+//
+void transferWeightsContext::resetTransferValues()
+{
+    transferValues = MDoubleArray(numVertices, 0.0);
+}
+
+
+//
+// Description:
 //      Go through the all vertices which are closest to the cursor,
 //      and get all connected vertices which are in range of the brush
 //      radius. Perform the averaging of the weights for all found
@@ -1801,13 +1786,13 @@ bool smoothWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFl
 //      MStatus             The MStatus for initializing the skin
 //                          cluster.
 //
-MStatus smoothWeightsContext::performSmooth(MEvent event,
-                                            MIntArray indices,
-                                            MFloatArray distances)
+MStatus transferWeightsContext::performTransfer(MEvent event,
+                                                MIntArray indices,
+                                                MFloatArray distances)
 {
     MStatus status = MStatus::kSuccess;
 
-    unsigned int i, j, m;
+    unsigned int i, j;
 
     bool flood = !eventIsValid(event);
 
@@ -1815,7 +1800,7 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
     MFnSkinCluster skinFn(skinObj, &status);
     CHECK_MSTATUS_AND_RETURN_IT(status);
 
-    MFnSingleIndexedComponent smoothedCompFn(smoothedCompObj);
+    MFnSingleIndexedComponent transferCompFn(transferCompObj);
 
     MItMeshVertex vtxIter(meshDag);
 
@@ -1827,7 +1812,7 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
         MFloatArray values;
 
         // -------------------------------------------------------------
-        // get all vertices which should get smoothed
+        // get all vertices which should get their weights transferred
         // -------------------------------------------------------------
 
         // In paint mode, get the indices within the brush radius.
@@ -1890,15 +1875,15 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
                 filteredIndices.append(rangeIndex);
                 // Add the current index to the component list which
                 // contains all indices which are modified during the
-                // smoothing. The component list is needed for undo.
-                smoothedCompFn.addElement(rangeIndex);
+                // transfer. The component list is needed for undo.
+                transferCompFn.addElement(rangeIndex);
 
                 // -----------------------------------------------------
                 // Check for shell boundaries and collect the vertex
                 // pairs.
                 // -----------------------------------------------------
 
-                // If the smoothing should span across the shell check
+                // If the transfer should span across the shell check
                 // if the current vertex is located on the boundary.
                 // Note:
                 // Performing the boundary query here might seem
@@ -1906,8 +1891,8 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
                 // already done when getting the vertices within the
                 // brush radius. Checking the boundary and storing the
                 // opposite boundary vertex could have already happend.
-                // But this would not work if a flood smooth is done on
-                // the selection because the manual selection doesn't
+                // But this would not work if a flood transfer is done
+                // on the selection because the manual selection doesn't
                 // undergo the boundary detection. Therefore it's easier
                 // to collect the actual boundary vertices with the
                 // current range, no matter where it originates from.
@@ -1951,7 +1936,7 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
                                 indexMap[(unsigned)oppositeIndex] = rangeIndex;
 
                                 // Remove the opposite index from the
-                                // smoothing calculation.
+                                // transfer calculation.
                                 computeIndex[(unsigned)oppositeIndex] = false;
                                 computeIndex[(unsigned)rangeIndex] = true;
 
@@ -1993,67 +1978,63 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
         // The weights of all vertices already have been stored during
         // the press event along with the weights for undo.
 
-        // Create a new weights array to hold the smoothed weights.
+        // Create a new weights array to hold the transferred weights.
         // The length of the array is the number of vertices within the
         // brush radius * the number of influences.
-        smoothedWeights = MDoubleArray(rangeCount * influenceCount, 0.0);
+        transferredWeights = MDoubleArray(rangeCount * influenceCount, 0.0);
 
         // -------------------------------------------------------------
-        // smooth the weights in a multi-threaded loop
+        // transfer the weights in a multi-threaded loop
         // -------------------------------------------------------------
 
-        for (m = 0; m < (unsigned)oversamplingVal; m ++)
+        tbb::parallel_for(tbb::blocked_range<unsigned int>(0, rangeCount),
+                          [&](tbb::blocked_range<unsigned int> r)
         {
-            tbb::parallel_for(tbb::blocked_range<unsigned int>(0, rangeCount),
-                              [&](tbb::blocked_range<unsigned int> r)
+            for (unsigned int k = r.begin(); k < r.end(); k ++)
             {
-                for (unsigned int k = r.begin(); k < r.end(); k ++)
+                unsigned int rangeIndex = (unsigned)rangeIndices[k];
+
+                // Only transfer the indices which are have their
+                // compute flag set to true. This applies to all
+                // vertices in single-shell mode or only one vertex in
+                // each shell-boundary pair.
+                if (computeIndex[rangeIndex])
                 {
-                    unsigned int rangeIndex = (unsigned)rangeIndices[k];
+                    int oppositeIndex = indexMap[rangeIndex];
+                    int oppositeElement = -1;
 
-                    // Only smooth the indices which are have their
-                    // compute flag set to true. This applies to all
-                    // vertices in single-shell mode or only one vertex
-                    // in each shell-boundary pair.
-                    if (computeIndex[rangeIndex])
+                    // In case of the multi-shell mode check if an
+                    // opposite vertex exists for the current vertex.
+                    if (keepShellsTogetherVal && oppositeIndex > -1)
                     {
-                        int oppositeIndex = indexMap[rangeIndex];
-                        int oppositeElement = -1;
-
-                        // In case of the multi-shell mode check if an
-                        // opposite vertex exists for the current
-                        // vertex.
-                        if (keepShellsTogetherVal && oppositeIndex > -1)
+                        // Go through all indices of the range and find
+                        // the position of the opposite vertex index.
+                        // This is needed for being able to set the
+                        // according weights to the same values as the
+                        // source boundary index.
+                        for (unsigned l = 0; l < rangeCount; l ++)
                         {
-                            // Go through all indices of the range and
-                            // find the position of the opposite vertex
-                            // index. This is needed for being able to
-                            // set the according weights to the same
-                            // values as the source boundary index.
-                            for (unsigned l = 0; l < rangeCount; l ++)
+                            if ((int)rangeIndices[l] == oppositeIndex)
                             {
-                                if ((int)rangeIndices[l] == oppositeIndex)
-                                {
-                                    oppositeElement = (int)l;
-                                    break;
-                                }
+                                oppositeElement = (int)l;
+                                break;
                             }
                         }
-
-                        computeWeights(rangeIndex,
-                                       orderedValues[rangeIndex],
-                                       oppositeIndex,
-                                       k,
-                                       oppositeElement,
-                                       rangeIndices,
-                                       flood);
                     }
+
+                    computeTransfer(rangeIndex,
+                                    orderedValues[rangeIndex],
+                                    oppositeIndex,
+                                    k,
+                                    oppositeElement,
+                                    rangeIndices,
+                                    flood);
                 }
-            });
-        }
+            }
+        });
 
         // Set the new weights.
-        skinFn.setWeights(meshDag, vtxComponents, influenceIndices, smoothedWeights, normalize);
+        skinFn.setWeights(meshDag, vtxComponents, influenceIndices, transferredWeights, normalize);
     }
 
     view.refresh(true);
@@ -2069,7 +2050,7 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
 //
 // Input Arguments:
 //      index               The vertex index.
-//      scale               The scale value for the smoothing.
+//      scale               The scale value for the transfer.
 //      oppositeIndex       The opposite boundary index.
 //      element             The element index of the vertex index
 //                          in the current array of brush vertices.
@@ -2078,62 +2059,26 @@ MStatus smoothWeightsContext::performSmooth(MEvent event,
 //      oppositeElement     The element index of the opposite index.
 //      volumeIndices       The complete list of indices within the
 //                          brush radius. These are needed for the
-//                          volume-based smoothing.
-//      flood               True, if a flood smooth is performed.
+//                          volume-based transfer.
+//      flood               True, if a flood transfer is performed.
 //
 // Return Value:
 //      None
 //
-void smoothWeightsContext::computeWeights(unsigned int index,
-                                          double scale,
-                                          int oppositeIndex,
-                                          unsigned int element,
-                                          int oppositeElement,
-                                          MIntArray volumeIndices,
-                                          bool flood)
+void transferWeightsContext::computeTransfer(unsigned int index,
+                                             double scale,
+                                             int oppositeIndex,
+                                             unsigned int element,
+                                             int oppositeElement,
+                                             MIntArray volumeIndices,
+                                             bool flood)
 {
-    unsigned int i, j;
+    unsigned int i, j, m, n;
 
-    // Create the object for the current vertex.
-    MFnSingleIndexedComponent vtxCompFn;
-    MObject vtxObj = vtxCompFn.create(MFn::kMeshVertComponent);
-    vtxCompFn.addElement((int)index);
-
-    // Get the connected vertices.
-    MItMeshVertex vtxIter(meshDag, vtxObj);
-    MIntArray connected;
-    int prevIndex;
-
-    // The array for storing the distance based falloff values when in
-    // volume mode.
-    MFloatArray rangeValues;
-
-    if (!volumeVal)
+    if (volumeVal)
     {
-        vtxIter.getConnectedVertices(connected);
-
-        // If an opposite vertex exists in case of a boundary vertex get
-        // it's connected vertices and add these to the connected array.
-        if (oppositeIndex > -1)
-        {
-            vtxIter.setIndex(oppositeIndex, prevIndex);
-            MIntArray connectedOpposite;
-            vtxIter.getConnectedVertices(connectedOpposite);
-            for (i = 0; i < connectedOpposite.length(); i ++)
-                connected.append(connectedOpposite[i]);
-        }
-    }
-    else
-    {
-        // Based on the brush volume get all indices which are within
-        // the range if the current vertex.
-        MIntArray rangeIndices;
-        getVerticesInVolumeRange((int)index, volumeIndices, rangeIndices, rangeValues);
-
-        // The range vertices are the ones the current vertex gets it's
-        // weights from, just like the connected vertices in surface
-        // mode.
-        connected.copy(rangeIndices);
+        MItMeshVertex vtxIter(meshDag);
+        int prevIndex;
 
         // Create the scale value for the brush falloff based on the
         // distance of the current vertex to the surface point at the
@@ -2145,110 +2090,65 @@ void smoothWeightsContext::computeWeights(unsigned int index,
     }
 
     // Get the scale value based on the brush falloff and strength.
-    double smoothStrength = strengthVal;
-    if (fractionOversamplingVal)
-        smoothStrength /= oversamplingVal;
-    scale = getFalloffValue(scale, smoothStrength);
+    // The strength value is multiplied by itself to soften the value.
+    // Otherwise even small strength values would have a fast transfer
+    // effect.
+    scale = getFalloffValue(scale, strengthVal * strengthVal) + transferValues[index];
 
-    unsigned int connectedCount = connected.length();
+    // Limit the scale value so that normalization doesn't break.
+    if (scale > 1.0)
+        scale = 1.0;
 
-    double maxWeight = 0.0;
+    // Save the current transfer multiplier.
+    transferValues[index] = scale;
 
-    // Create a new array for the averaged weights for the max influence
-    // process.
-    MDoubleArray newWeights(influenceCount, 0.0);
-    MIntArray inflIndices;
-    inflIndices.setLength(influenceCount);
-
-    // -----------------------------------------------------------------
-    // smooth by averaging connected weights
-    // -----------------------------------------------------------------
-
-    for (i = 0; i < influenceCount; i ++)
+    // Define which index is the source and which the destination index
+    // based on the state of the reverse switch.
+    int sourceIndex = sourceInfluenceVal;
+    int destinationIndex = destinationInfluenceVal;
+    if (reverseVal)
     {
-        double currentValue = 0.0;
-        double weight = 0.0;
+        sourceIndex = destinationInfluenceVal;
+        destinationIndex = sourceInfluenceVal;
+    }
 
-        // Create an index based on the influence count.
-        unsigned int k = influenceCount * element + i;
-        unsigned int w = influenceCount * index + i;
-        currentValue = (currentWeights[w] / connectedCount) * (1 - scale);
-
-        bool unlocked = true;
-        if (influenceLocks[i] && !ignoreLockVal)
-            unlocked = false;
-
-        // Collect the weights per influence.
-        // When in volume mode it's possible that the volume range is
-        // too small and no vertices are found. In this case there are
-        // no weights to average. But since the resulting
-        // smoothedWeights array is initialized with 0 values the
-        // current weights have to get transferred to smoothedWeights
-        // or the vertex will have no weights at all.
-        if (connectedCount && unlocked)
-        {
-            for (j = 0; j < connectedCount; j ++)
-            {
-                // Create an index based on the influence count.
-                unsigned int l = influenceCount * (unsigned)connected[j] + i;
-
-                double weightScale = scale;
-                if (volumeVal)
-                    weightScale = rangeValues[j];
-                weight += ((currentWeights[l] / connectedCount) * weightScale) + currentValue;
-            }
-        }
-        else
-            weight = currentWeights[w];
-
-        smoothedWeights.set(weight, k);
-        setCurrentWeight(weight, w, flood);
-
-        newWeights.set(weight, i);
-        inflIndices.set((int)i, i);
-
-        maxWeight += weight;
+    // Check if source and destination influences are unlocked.
+    // Also check if the indices are valid by having an index which is
+    // within the range of the number of influences.
+    bool unlocked = true;
+    if (sourceIndex == -1 ||
+        destinationIndex == -1 ||
+        sourceIndex >= (int)influenceCount ||
+        destinationIndex >= (int)influenceCount ||
+        influenceLocks[(unsigned)sourceIndex] || influenceLocks[(unsigned)destinationIndex])
+    {
+        unlocked = false;
     }
 
     // -----------------------------------------------------------------
-    // maintain max influences
+    // transfer the weights
     // -----------------------------------------------------------------
 
-    if (connectedCount)
+    double weight = 0.0;
+
+    // Create the indices based on the influence count.
+    unsigned int k = influenceCount * element + (unsigned)sourceIndex;
+    unsigned int l = influenceCount * element + (unsigned)destinationIndex;
+    unsigned int v = influenceCount * index + (unsigned)sourceIndex;
+    unsigned int w = influenceCount * index + (unsigned)destinationIndex;
+
+    weight = currentWeights[w];
+
+    if (currentWeights[v] > 0.0 && unlocked)
     {
-        if (maintainMaxInfluences)
-        {
-            MIntArray sortedIds = sortIndicesByValues(inflIndices, newWeights);
+        double weightScale = scale;
 
-            // Define the start index to find the max weight indices
-            // based on the max influences count.
-            unsigned int maxLimitIndex = influenceCount - maxInfluences;
-            if (influenceCount < maxInfluences)
-                maxLimitIndex = 0;
+        weight += currentWeights[v] * weightScale;
 
-            maxWeight = 0.0;
-
-            for (i = 0; i < influenceCount; i ++)
-            {
-                unsigned int sortedIndex = (unsigned)sortedIds[i];
-
-                unsigned int k = influenceCount * element + sortedIndex;
-                unsigned int w = influenceCount * index + sortedIndex;
-
-                if (i < maxLimitIndex)
-                {
-                    smoothedWeights.set(0.0, k);
-                    setCurrentWeight(0.0, w, flood);
-                }
-                else
-                {
-                    double weight = newWeights[sortedIndex];
-                    smoothedWeights.set(weight, k);
-                    setCurrentWeight(weight, w, flood);
-                    maxWeight += weight;
-                }
-            }
-        }
+        // Set the destination influence weight.
+        transferredWeights.set(weight, l);
+        // Set the source influence weight.
+        transferredWeights.set(currentWeights[v] * (1 - weightScale), k);
 
         // -------------------------------------------------------------
         // normalize
@@ -2256,67 +2156,52 @@ void smoothWeightsContext::computeWeights(unsigned int index,
 
         if (normalize)
         {
+            double maxWeight = 0.0;
             for (i = 0; i < influenceCount; i ++)
             {
-                unsigned int k = influenceCount * element + i;
-                unsigned int w = influenceCount * index + i;
-                double value = smoothedWeights[k] / maxWeight;
-                smoothedWeights.set(value, k);
-                setCurrentWeight(value, w, flood);
+                j = influenceCount * element + i;
+                maxWeight += transferredWeights[j];
             }
-        }
 
-        // -------------------------------------------------------------
-        // matching the values of the opposite boundary vertex
-        // -------------------------------------------------------------
-
-        // If an opposite vertex exists in case of a boundary vertex
-        // apply the same final weights to the opposite vertex as well.
-        if (oppositeIndex > -1)
-        {
             for (i = 0; i < influenceCount; i ++)
             {
-                unsigned int k = influenceCount * element + i;
-                double value = smoothedWeights[k];
-
-                k = influenceCount * (unsigned)oppositeElement + i;
-                unsigned int w = influenceCount * (unsigned)oppositeIndex + i;
-                smoothedWeights.set(value, k);
-                setCurrentWeight(value, w, flood);
+                j = influenceCount * element + i;
+                double value = transferredWeights[j] / maxWeight;
+                transferredWeights.set(value, j);
             }
         }
     }
-}
+    // If there is no source influence weight copy all influence weights
+    // from the current weights array to the resulting
+    // transferredWeights array.
+    else
+    {
+        for (i = 0; i < influenceCount; i ++)
+        {
+            m = influenceCount * index + i;
+            double value = currentWeights[m];
+            n = influenceCount * element + i;
+            transferredWeights.set(value, n);
+        }
+    }
 
+    // -------------------------------------------------------------
+    // matching the values of the opposite boundary vertex
+    // -------------------------------------------------------------
 
-//
-// Description:
-//      Set the weight value at the given index for the current weights
-//      array. The value only needs to get set when flooding is
-//      performed and the oversampling is set to anything larger than 1.
-//      The reason for this switch when flooding is because in order to
-//      get a smooth result the flooding needs to draw values from the
-//      original weights list. If this is not the case the result could
-//      be jaggy because some vertices draw from unsmoothed weights and
-//      others from already smoothed neighbours. But when flood
-//      smoothing with several iterations the next iteration needs to
-//      refer to previous smoothed iteration. Therefore the smoothed
-//      values need to get stored in the currentWeights array.
-//
-// Input Arguments:
-//      event               The mouse event.
-//      indices             The list of vertex indices along the
-//                          intersection ray.
-//      distances           The list of distances of the vertices to the
-//                          intersection ray.
-//
-// Return Value:
-//      MStatus             The MStatus for selecting the components.
-//
-void smoothWeightsContext::setCurrentWeight(double value, unsigned int index, bool flood)
-{
-    if (!flood || (flood && oversamplingVal > 1))
-        currentWeights.set(value, index);
+    // If an opposite vertex exists in case of a boundary vertex
+    // apply the same final weights to the opposite vertex as well.
+    if (oppositeIndex > -1)
+    {
+        for (i = 0; i < influenceCount; i ++)
+        {
+            j = influenceCount * element + i;
+            double value = transferredWeights[j];
+
+            j = influenceCount * (unsigned)oppositeElement + i;
+            transferredWeights.set(value, j);
+        }
+    }
 }
 
 
@@ -2336,9 +2221,9 @@ void smoothWeightsContext::setCurrentWeight(double value, unsigned int index, bo
 // Return Value:
 //      MStatus             The MStatus for selecting the components.
 //
-MStatus smoothWeightsContext::performSelect(MEvent event,
-                                            MIntArray indices,
-                                            MFloatArray distances)
+MStatus transferWeightsContext::performSelect(MEvent event,
+                                              MIntArray indices,
+                                              MFloatArray distances)
 {
     MStatus status = MStatus::kSuccess;
 
@@ -2403,7 +2288,7 @@ MStatus smoothWeightsContext::performSelect(MEvent event,
 
 //
 // Description:
-//      Compute the smoothing for either all vertices if only the mesh
+//      Compute the transfer for either all vertices if only the mesh
 //      is selected or just the current vertex selection.
 //
 // Input Arguments:
@@ -2412,15 +2297,15 @@ MStatus smoothWeightsContext::performSelect(MEvent event,
 // Return Value:
 //      None
 //
-void smoothWeightsContext::performFlood()
+void transferWeightsContext::performFlood()
 {
     unsigned int i;
 
     MEvent event;
 
     // Execute the common press method to get the current selection and
-    // initialize the smoothing. Pass an empty event which tells the
-    // method to simply smooth with the current strength value.
+    // initialize the transfer. Pass an empty event which tells the
+    // method to simply transfer with the current strength value.
     doPressCommon(event);
 
     // If the current selection doesn't contain any components fill the
@@ -2436,7 +2321,7 @@ void smoothWeightsContext::performFlood()
         return;
 
     // Reverse the index list if only the unselected vertices should get
-    // smoothed.
+    // transferred.
     if (!affectSelectedVal)
     {
         // Create an array for all indices and set the indices of the
@@ -2457,14 +2342,14 @@ void smoothWeightsContext::performFlood()
     }
 
     // Create an array with only the first index of the selection to be
-    // able to call performSmooth(). This is identical to passing the
+    // able to call performTransfer(). This is identical to passing the
     // closest vertex to the brush when painting.
     MIntArray indices;
     indices.append(vtxSelection[0]);
     MFloatArray values;
 
-    // Perform the smoothing.
-    performSmooth(event, indices, values);
+    // Perform the transfer.
+    performTransfer(event, indices, values);
     performBrush = true;
 
     // Finalize.
@@ -2483,7 +2368,7 @@ void smoothWeightsContext::performFlood()
 // Return Value:
 //      MObject             The component object for all mesh vertices.
 //
-MObject smoothWeightsContext::allVertexComponents(MDagPath meshDag)
+MObject transferWeightsContext::allVertexComponents(MDagPath meshDag)
 {
     MFnSingleIndexedComponent compFn;
     MObject vtxComponents = compFn.create(MFn::kMeshVertComponent);
@@ -2506,7 +2391,7 @@ MObject smoothWeightsContext::allVertexComponents(MDagPath meshDag)
 // Return Value:
 //      The sorted array of indices.
 //
-MIntArray smoothWeightsContext::sortIndicesByValues(MIntArray indices, MDoubleArray values)
+MIntArray transferWeightsContext::sortIndicesByValues(MIntArray indices, MDoubleArray values)
 {
     unsigned int i, j;
 
@@ -2548,10 +2433,10 @@ MIntArray smoothWeightsContext::sortIndicesByValues(MIntArray indices, MDoubleAr
 // Return Value:
 //      None
 //
-void smoothWeightsContext::getVerticesInRange(int index,
-                                              int hitIndex,
-                                              MIntArray &indices,
-                                              MFloatArray &values)
+void transferWeightsContext::getVerticesInRange(int index,
+                                                int hitIndex,
+                                                MIntArray &indices,
+                                                MFloatArray &values)
 {
     unsigned int i, j;
 
@@ -2638,12 +2523,12 @@ void smoothWeightsContext::getVerticesInRange(int index,
 // Return Value:
 //      None
 //
-void smoothWeightsContext::getConnectedInRange(MPoint centerPoint,
-                                               int index,
-                                               std::vector<bool> &visited,
-                                               MIntArray &indices,
-                                               MFloatArray &values,
-                                               int &oppositeIndex)
+void transferWeightsContext::getConnectedInRange(MPoint centerPoint,
+                                                 int index,
+                                                 std::vector<bool> &visited,
+                                                 MIntArray &indices,
+                                                 MFloatArray &values,
+                                                 int &oppositeIndex)
 {
     unsigned int i;
 
@@ -2738,7 +2623,7 @@ void smoothWeightsContext::getConnectedInRange(MPoint centerPoint,
 // Return Value:
 //      None
 //
-void smoothWeightsContext::appendConnectedIndices(int index, MIntArray &indices)
+void transferWeightsContext::appendConnectedIndices(int index, MIntArray &indices)
 {
     unsigned int i;
 
@@ -2765,7 +2650,7 @@ void smoothWeightsContext::appendConnectedIndices(int index, MIntArray &indices)
 // Return Value:
 //      int array           The array of indices in the volume.
 //
-MIntArray smoothWeightsContext::getVerticesInVolume()
+MIntArray transferWeightsContext::getVerticesInVolume()
 {
     MIntArray indices;
 
@@ -2796,75 +2681,6 @@ MIntArray smoothWeightsContext::getVerticesInVolume()
 
 //
 // Description:
-//      Return the vertex indices of the brush volume which are within
-//      the range of the current index.
-//
-// Input Arguments:
-//      index               The vertex index.
-//      volumeIndices       The array of all indices of the brush
-//                          volume.
-//      rangeIndices        The array of indices which are in range of
-//                          the vertex.
-//      values              The array of falloff values based on the
-//                          distance to the center vertex.
-//
-// Return Value:
-//      None
-//
-void smoothWeightsContext::getVerticesInVolumeRange(int index,
-                                                    MIntArray volumeIndices,
-                                                    MIntArray &rangeIndices,
-                                                    MFloatArray &values)
-{
-    unsigned int i;
-
-    double radius = sizeVal * rangeVal;
-    radius *= radius;
-
-    double smoothStrength = strengthVal;
-    if (fractionOversamplingVal)
-        smoothStrength /= oversamplingVal;
-
-    MItMeshVertex vtxIter(meshDag);
-    int prevIndex;
-    vtxIter.setIndex(index, prevIndex);
-
-    MPoint point = vtxIter.position(MSpace::kWorld);
-
-    for (i = 0; i < volumeIndices.length(); i ++)
-    {
-        int volumeIndex = volumeIndices[i];
-
-        vtxIter.setIndex(volumeIndex, prevIndex);
-
-        MPoint pnt = vtxIter.position(MSpace::kWorld);
-
-        double x = pnt.x - point.x;
-        double y = pnt.y - point.y;
-        double z = pnt.z - point.z;
-
-        x *= x;
-        y *= y;
-        z *= z;
-
-        double delta = x + y + z;
-
-        if (volumeIndex != index && delta <= radius)
-        {
-            rangeIndices.append(volumeIndex);
-
-            float value = (float)(1 - (delta / radius));
-            value = (float)getFalloffValue(value, smoothStrength);
-            values.append(value);
-        }
-
-        vtxIter.next();
-    }
-}
-
-
-//
-// Description:
 //      Calculate the brush weight value based on the given linear
 //      falloff value.
 //
@@ -2875,7 +2691,7 @@ void smoothWeightsContext::getVerticesInVolumeRange(int index,
 // Return Value:
 //      double              The brush curve-based falloff value.
 //
-double smoothWeightsContext::getFalloffValue(double value, double strength)
+double transferWeightsContext::getFalloffValue(double value, double strength)
 {
     if (curveVal == 0)
         return 1.0 * strength;
@@ -2904,7 +2720,7 @@ double smoothWeightsContext::getFalloffValue(double value, double strength)
 // Return Value:
 //      bool                True, if the event is valid.
 //
-bool smoothWeightsContext::eventIsValid(MEvent event)
+bool transferWeightsContext::eventIsValid(MEvent event)
 {
     MStatus status;
     event.mouseButton(&status);
@@ -2928,7 +2744,7 @@ bool smoothWeightsContext::eventIsValid(MEvent event)
 // Return Value:
 //      bool                True, if vertex lies on a boundary.
 //
-bool smoothWeightsContext::onBoundary(int index)
+bool transferWeightsContext::onBoundary(int index)
 {
     unsigned int i;
 
@@ -2970,10 +2786,10 @@ bool smoothWeightsContext::onBoundary(int index)
 // Return Value:
 //      bool                True, if an opposite vertex has been found.
 //
-bool smoothWeightsContext::oppositeBoundaryIndex(MPoint point,
-                                                 MIntArray faces,
-                                                 MIntArray edges,
-                                                 int &index)
+bool transferWeightsContext::oppositeBoundaryIndex(MPoint point,
+                                                   MIntArray faces,
+                                                   MIntArray edges,
+                                                   int &index)
 {
     unsigned int i;
 
@@ -3061,7 +2877,7 @@ bool smoothWeightsContext::oppositeBoundaryIndex(MPoint point,
 //      bool                True, if the found face index doesn't
 //                          belong to the source shell.
 //
-bool smoothWeightsContext::getClosestFace(MPoint point, MIntArray faces, int &index)
+bool transferWeightsContext::getClosestFace(MPoint point, MIntArray faces, int &index)
 {
     unsigned int i;
 
@@ -3092,7 +2908,7 @@ bool smoothWeightsContext::getClosestFace(MPoint point, MIntArray faces, int &in
 // Return Value:
 //      double              The average edge length.
 //
-double smoothWeightsContext::averageEdgeLength(MIntArray edges)
+double transferWeightsContext::averageEdgeLength(MIntArray edges)
 {
     unsigned int i;
 
@@ -3117,96 +2933,96 @@ double smoothWeightsContext::averageEdgeLength(MIntArray edges)
 }
 
 
-void smoothWeightsContext::setInViewMessage(bool display)
+void transferWeightsContext::setInViewMessage(bool display)
 {
     if (display && messageVal)
-        MGlobal::executeCommand("brSmoothWeightsShowInViewMessage");
+        MGlobal::executeCommand("brTransferWeightsShowInViewMessage");
     else
-        MGlobal::executeCommand("brSmoothWeightsHideInViewMessage");
+        MGlobal::executeCommand("brTransferWeightsHideInViewMessage");
 }
 
 // ---------------------------------------------------------------------
 // setting values from the command flags
 // ---------------------------------------------------------------------
 
-void smoothWeightsContext::setAffectSelected(bool value)
+void transferWeightsContext::setAffectSelected(bool value)
 {
     affectSelectedVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setColorR(float value)
+void transferWeightsContext::setColorR(float value)
 {
     colorVal.r = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setColorG(float value)
+void transferWeightsContext::setColorG(float value)
 {
     colorVal.g = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setColorB(float value)
+void transferWeightsContext::setColorB(float value)
 {
     colorVal.b = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setCurve(int value)
+void transferWeightsContext::setCurve(int value)
 {
     curveVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setDepth(int value)
+void transferWeightsContext::setDepth(int value)
 {
     depthVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setDepthStart(int value)
+void transferWeightsContext::setDepthStart(int value)
 {
     depthStartVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setDrawBrush(bool value)
+void transferWeightsContext::setDestinationInfluence(int value)
+{
+    destinationInfluenceVal = value;
+    MToolsInfo::setDirtyFlag(*this);
+}
+
+
+void transferWeightsContext::setDrawBrush(bool value)
 {
     drawBrushVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setDrawRange(bool value)
-{
-    drawRangeVal = value;
-    MToolsInfo::setDirtyFlag(*this);
-}
-
-
-void smoothWeightsContext::setEnterToolCommand(MString value)
+void transferWeightsContext::setEnterToolCommand(MString value)
 {
     enterToolCommandVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setExitToolCommand(MString value)
+void transferWeightsContext::setExitToolCommand(MString value)
 {
     exitToolCommandVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setFlood(double value)
+void transferWeightsContext::setFlood(double value)
 {
     strengthVal = value;
     MToolsInfo::setDirtyFlag(*this);
@@ -3215,35 +3031,21 @@ void smoothWeightsContext::setFlood(double value)
 }
 
 
-void smoothWeightsContext::setFractionOversampling(bool value)
-{
-    fractionOversamplingVal = value;
-    MToolsInfo::setDirtyFlag(*this);
-}
-
-
-void smoothWeightsContext::setIgnoreLock(bool value)
-{
-    ignoreLockVal = value;
-    MToolsInfo::setDirtyFlag(*this);
-}
-
-
-void smoothWeightsContext::setKeepShellsTogether(bool value)
+void transferWeightsContext::setKeepShellsTogether(bool value)
 {
     keepShellsTogetherVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setLineWidth(int value)
+void transferWeightsContext::setLineWidth(int value)
 {
     lineWidthVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setMessage(int value)
+void transferWeightsContext::setMessage(int value)
 {
     messageVal = value;
     MToolsInfo::setDirtyFlag(*this);
@@ -3252,49 +3054,56 @@ void smoothWeightsContext::setMessage(int value)
 }
 
 
-void smoothWeightsContext::setOversampling(int value)
+void transferWeightsContext::setReplace(bool value)
 {
-    oversamplingVal = value;
+    replaceVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setRange(double value)
+void transferWeightsContext::setReverse(bool value)
 {
-    rangeVal = value;
+    reverseVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setSize(double value)
+void transferWeightsContext::setSize(double value)
 {
     sizeVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setStrength(double value)
+void transferWeightsContext::setSourceInfluence(int value)
+{
+    sourceInfluenceVal = value;
+    MToolsInfo::setDirtyFlag(*this);
+}
+
+
+void transferWeightsContext::setStrength(double value)
 {
     strengthVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setTolerance(double value)
+void transferWeightsContext::setTolerance(double value)
 {
     toleranceVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setUndersampling(int value)
+void transferWeightsContext::setUndersampling(int value)
 {
     undersamplingVal = value;
     MToolsInfo::setDirtyFlag(*this);
 }
 
 
-void smoothWeightsContext::setVolume(bool value)
+void transferWeightsContext::setVolume(bool value)
 {
     volumeVal = value;
     MToolsInfo::setDirtyFlag(*this);
@@ -3305,139 +3114,133 @@ void smoothWeightsContext::setVolume(bool value)
 // getting values from the command flags
 // ---------------------------------------------------------------------
 
-bool smoothWeightsContext::getAffectSelected()
+bool transferWeightsContext::getAffectSelected()
 {
     return affectSelectedVal;
 }
 
 
-float smoothWeightsContext::getColorR()
+float transferWeightsContext::getColorR()
 {
     return colorVal.r;
 }
 
 
-float smoothWeightsContext::getColorG()
+float transferWeightsContext::getColorG()
 {
     return colorVal.g;
 }
 
 
-float smoothWeightsContext::getColorB()
+float transferWeightsContext::getColorB()
 {
     return colorVal.b;
 }
 
 
-int smoothWeightsContext::getCurve()
+int transferWeightsContext::getCurve()
 {
     return curveVal;
 }
 
 
-int smoothWeightsContext::getDepth()
+int transferWeightsContext::getDepth()
 {
     return depthVal;
 }
 
 
-int smoothWeightsContext::getDepthStart()
+int transferWeightsContext::getDepthStart()
 {
     return depthStartVal;
 }
 
 
-bool smoothWeightsContext::getDrawBrush()
+int transferWeightsContext::getDestinationInfluence()
+{
+    return destinationInfluenceVal;
+}
+
+
+bool transferWeightsContext::getDrawBrush()
 {
     return drawBrushVal;
 }
 
 
-bool smoothWeightsContext::getDrawRange()
-{
-    return drawRangeVal;
-}
-
-
-MString smoothWeightsContext::getEnterToolCommand()
+MString transferWeightsContext::getEnterToolCommand()
 {
     return enterToolCommandVal;
 }
 
 
-MString smoothWeightsContext::getExitToolCommand()
+MString transferWeightsContext::getExitToolCommand()
 {
     return exitToolCommandVal;
 }
 
 
-bool smoothWeightsContext::getFractionOversampling()
-{
-    return fractionOversamplingVal;
-}
-
-
-bool smoothWeightsContext::getIgnoreLock()
-{
-    return ignoreLockVal;
-}
-
-
-bool smoothWeightsContext::getKeepShellsTogether()
+bool transferWeightsContext::getKeepShellsTogether()
 {
     return keepShellsTogetherVal;
 }
 
 
-int smoothWeightsContext::getLineWidth()
+int transferWeightsContext::getLineWidth()
 {
     return lineWidthVal;
 }
 
 
-int smoothWeightsContext::getMessage()
+int transferWeightsContext::getMessage()
 {
     return messageVal;
 }
 
 
-int smoothWeightsContext::getOversampling()
+bool transferWeightsContext::getReplace()
 {
-    return oversamplingVal;
+    return replaceVal;
 }
 
 
-double smoothWeightsContext::getRange()
+bool transferWeightsContext::getReverse()
 {
-    return rangeVal;
+    return reverseVal;
 }
 
 
-double smoothWeightsContext::getSize()
+double transferWeightsContext::getSize()
 {
     return sizeVal;
 }
 
 
-double smoothWeightsContext::getStrength()
+int transferWeightsContext::getSourceInfluence()
+{
+    return sourceInfluenceVal;
+}
+
+
+double transferWeightsContext::getStrength()
 {
     return strengthVal;
 }
 
 
-double smoothWeightsContext::getTolerance()
+double transferWeightsContext::getTolerance()
 {
     return toleranceVal;
 }
 
 
-int smoothWeightsContext::getUndersampling()
+int transferWeightsContext::getUndersampling()
 {
     return undersamplingVal;
 }
 
 
-bool smoothWeightsContext::getVolume()
+bool transferWeightsContext::getVolume()
 {
     return volumeVal;
 }
@@ -3447,20 +3250,20 @@ bool smoothWeightsContext::getVolume()
 // command to create the context
 // ---------------------------------------------------------------------
 
-smoothWeightsContextCmd::smoothWeightsContextCmd()
+transferWeightsContextCmd::transferWeightsContextCmd()
 {}
 
 
-MPxContext* smoothWeightsContextCmd::makeObj()
+MPxContext* transferWeightsContextCmd::makeObj()
 {
-    smoothContext = new smoothWeightsContext();
-    return smoothContext;
+    transferContext = new transferWeightsContext();
+    return transferContext;
 }
 
 
-void* smoothWeightsContextCmd::creator()
+void* transferWeightsContextCmd::creator()
 {
-    return new smoothWeightsContextCmd();
+    return new transferWeightsContextCmd();
 }
 
 
@@ -3468,7 +3271,7 @@ void* smoothWeightsContextCmd::creator()
 // pointers for the argument flags
 // ---------------------------------------------------------------------
 
-MStatus smoothWeightsContextCmd::appendSyntax()
+MStatus transferWeightsContextCmd::appendSyntax()
 {
     MSyntax syn = syntax();
 
@@ -3479,19 +3282,18 @@ MStatus smoothWeightsContextCmd::appendSyntax()
     syn.addFlag(kCurveFlag, kCurveFlagLong, MSyntax::kLong);
     syn.addFlag(kDepthFlag, kDepthFlagLong, MSyntax::kLong);
     syn.addFlag(kDepthStartFlag, kDepthStartFlagLong, MSyntax::kLong);
+    syn.addFlag(kDestinationInfluenceFlag, kDestinationInfluenceFlagLong, MSyntax::kLong);
     syn.addFlag(kDrawBrushFlag, kDrawBrushFlagLong, MSyntax::kBoolean);
-    syn.addFlag(kDrawRangeFlag, kDrawRangeFlagLong, MSyntax::kBoolean);
     syn.addFlag(kEnterToolCommandFlag, kEnterToolCommandFlagLong, MSyntax::kString);
     syn.addFlag(kExitToolCommandFlag, kExitToolCommandFlagLong, MSyntax::kString);
     syn.addFlag(kFloodFlag, kFloodFlagLong, MSyntax::kDouble);
-    syn.addFlag(kFractionOversamplingFlag, kFractionOversamplingFlagLong, MSyntax::kBoolean);
-    syn.addFlag(kIgnoreLockFlag, kIgnoreLockFlagLong, MSyntax::kBoolean);
     syn.addFlag(kKeepShellsTogetherFlag, kKeepShellsTogetherFlagLong, MSyntax::kBoolean);
     syn.addFlag(kLineWidthFlag, kLineWidthFlagLong, MSyntax::kLong);
     syn.addFlag(kMessageFlag, kMessageFlagLong, MSyntax::kLong);
-    syn.addFlag(kOversamplingFlag, kOversamplingFlagLong, MSyntax::kLong);
-    syn.addFlag(kRangeFlag, kRangeFlagLong, MSyntax::kDouble);
+    syn.addFlag(kReplaceFlag, kReplaceFlagLong, MSyntax::kBoolean);
+    syn.addFlag(kReverseFlag, kReverseFlagLong, MSyntax::kBoolean);
     syn.addFlag(kSizeFlag, kSizeFlagLong, MSyntax::kDouble);
+    syn.addFlag(kSourceInfluenceFlag, kSourceInfluenceFlagLong, MSyntax::kLong);
     syn.addFlag(kStrengthFlag, kStrengthFlagLong, MSyntax::kDouble);
     syn.addFlag(kToleranceFlag, kToleranceFlagLong, MSyntax::kDouble);
     syn.addFlag(kUndersamplingFlag, kUndersamplingFlagLong, MSyntax::kLong);
@@ -3501,7 +3303,7 @@ MStatus smoothWeightsContextCmd::appendSyntax()
 }
 
 
-MStatus smoothWeightsContextCmd::doEditFlags()
+MStatus transferWeightsContextCmd::doEditFlags()
 {
     MStatus status = MStatus::kSuccess;
 
@@ -3511,246 +3313,236 @@ MStatus smoothWeightsContextCmd::doEditFlags()
     {
         bool value;
         status = argData.getFlagArgument(kAffectSelectedFlag, 0, value);
-        smoothContext->setAffectSelected(value);
+        transferContext->setAffectSelected(value);
     }
 
     if (argData.isFlagSet(kColorRFlag))
     {
         double value;
         status = argData.getFlagArgument(kColorRFlag, 0, value);
-        smoothContext->setColorR((float)value);
+        transferContext->setColorR((float)value);
     }
 
     if (argData.isFlagSet(kColorGFlag))
     {
         double value;
         status = argData.getFlagArgument(kColorGFlag, 0, value);
-        smoothContext->setColorG((float)value);
+        transferContext->setColorG((float)value);
     }
 
     if (argData.isFlagSet(kColorBFlag))
     {
         double value;
         status = argData.getFlagArgument(kColorBFlag, 0, value);
-        smoothContext->setColorB((float)value);
+        transferContext->setColorB((float)value);
     }
 
     if (argData.isFlagSet(kCurveFlag))
     {
         int value;
         status = argData.getFlagArgument(kCurveFlag, 0, value);
-        smoothContext->setCurve(value);
+        transferContext->setCurve(value);
     }
 
     if (argData.isFlagSet(kDepthFlag))
     {
         int value;
         status = argData.getFlagArgument(kDepthFlag, 0, value);
-        smoothContext->setDepth(value);
+        transferContext->setDepth(value);
     }
 
     if (argData.isFlagSet(kDepthStartFlag))
     {
         int value;
         status = argData.getFlagArgument(kDepthStartFlag, 0, value);
-        smoothContext->setDepthStart(value);
+        transferContext->setDepthStart(value);
+    }
+
+    if (argData.isFlagSet(kDestinationInfluenceFlag))
+    {
+        int value;
+        status = argData.getFlagArgument(kDestinationInfluenceFlag, 0, value);
+        transferContext->setDestinationInfluence(value);
     }
 
     if (argData.isFlagSet(kDrawBrushFlag))
     {
         bool value;
         status = argData.getFlagArgument(kDrawBrushFlag, 0, value);
-        smoothContext->setDrawBrush(value);
-    }
-
-    if (argData.isFlagSet(kDrawRangeFlag))
-    {
-        bool value;
-        status = argData.getFlagArgument(kDrawRangeFlag, 0, value);
-        smoothContext->setDrawRange(value);
+        transferContext->setDrawBrush(value);
     }
 
     if (argData.isFlagSet(kEnterToolCommandFlag))
     {
         MString value;
         status = argData.getFlagArgument(kEnterToolCommandFlag, 0, value);
-        smoothContext->setEnterToolCommand(value);
+        transferContext->setEnterToolCommand(value);
     }
 
     if (argData.isFlagSet(kExitToolCommandFlag))
     {
         MString value;
         status = argData.getFlagArgument(kExitToolCommandFlag, 0, value);
-        smoothContext->setExitToolCommand(value);
+        transferContext->setExitToolCommand(value);
     }
 
     if (argData.isFlagSet(kFloodFlag))
     {
         double value;
         status = argData.getFlagArgument(kFloodFlag, 0, value);
-        smoothContext->setFlood(value);
-    }
-
-    if (argData.isFlagSet(kFractionOversamplingFlag))
-    {
-        bool value;
-        status = argData.getFlagArgument(kFractionOversamplingFlag, 0, value);
-        smoothContext->setFractionOversampling(value);
-    }
-
-    if (argData.isFlagSet(kIgnoreLockFlag))
-    {
-        bool value;
-        status = argData.getFlagArgument(kIgnoreLockFlag, 0, value);
-        smoothContext->setIgnoreLock(value);
+        transferContext->setFlood(value);
     }
 
     if (argData.isFlagSet(kKeepShellsTogetherFlag))
     {
         bool value;
         status = argData.getFlagArgument(kKeepShellsTogetherFlag, 0, value);
-        smoothContext->setKeepShellsTogether(value);
+        transferContext->setKeepShellsTogether(value);
     }
 
     if (argData.isFlagSet(kLineWidthFlag))
     {
         int value;
         status = argData.getFlagArgument(kLineWidthFlag, 0, value);
-        smoothContext->setLineWidth(value);
+        transferContext->setLineWidth(value);
     }
 
     if (argData.isFlagSet(kMessageFlag))
     {
         int value;
         status = argData.getFlagArgument(kMessageFlag, 0, value);
-        smoothContext->setMessage(value);
+        transferContext->setMessage(value);
     }
 
-    if (argData.isFlagSet(kOversamplingFlag))
+    if (argData.isFlagSet(kReplaceFlag))
     {
-        int value;
-        status = argData.getFlagArgument(kOversamplingFlag, 0, value);
-        smoothContext->setOversampling(value);
+        bool value;
+        status = argData.getFlagArgument(kReplaceFlag, 0, value);
+        transferContext->setReplace(value);
     }
 
-    if (argData.isFlagSet(kRangeFlag))
+    if (argData.isFlagSet(kReverseFlag))
     {
-        double value;
-        status = argData.getFlagArgument(kRangeFlag, 0, value);
-        smoothContext->setRange(value);
+        bool value;
+        status = argData.getFlagArgument(kReverseFlag, 0, value);
+        transferContext->setReverse(value);
     }
 
     if (argData.isFlagSet(kSizeFlag))
     {
         double value;
         status = argData.getFlagArgument(kSizeFlag, 0, value);
-        smoothContext->setSize(value);
+        transferContext->setSize(value);
+    }
+
+    if (argData.isFlagSet(kSourceInfluenceFlag))
+    {
+        int value;
+        status = argData.getFlagArgument(kSourceInfluenceFlag, 0, value);
+        transferContext->setSourceInfluence(value);
     }
 
     if (argData.isFlagSet(kStrengthFlag))
     {
         double value;
         status = argData.getFlagArgument(kStrengthFlag, 0, value);
-        smoothContext->setStrength(value);
+        transferContext->setStrength(value);
     }
 
     if (argData.isFlagSet(kToleranceFlag))
     {
         double value;
         status = argData.getFlagArgument(kToleranceFlag, 0, value);
-        smoothContext->setTolerance(value);
+        transferContext->setTolerance(value);
     }
 
     if (argData.isFlagSet(kUndersamplingFlag))
     {
         int value;
         status = argData.getFlagArgument(kUndersamplingFlag, 0, value);
-        smoothContext->setUndersampling(value);
+        transferContext->setUndersampling(value);
     }
 
     if (argData.isFlagSet(kVolumeFlag))
     {
         bool value;
         status = argData.getFlagArgument(kVolumeFlag, 0, value);
-        smoothContext->setVolume(value);
+        transferContext->setVolume(value);
     }
 
     return status;
 }
 
 
-MStatus smoothWeightsContextCmd::doQueryFlags()
+MStatus transferWeightsContextCmd::doQueryFlags()
 {
     MArgParser argData = parser();
 
     if (argData.isFlagSet(kAffectSelectedFlag))
-        setResult(smoothContext->getAffectSelected());
+        setResult(transferContext->getAffectSelected());
 
     if (argData.isFlagSet(kColorRFlag))
-        setResult(smoothContext->getColorR());
+        setResult(transferContext->getColorR());
 
     if (argData.isFlagSet(kColorGFlag))
-        setResult(smoothContext->getColorG());
+        setResult(transferContext->getColorG());
 
     if (argData.isFlagSet(kColorBFlag))
-        setResult(smoothContext->getColorB());
+        setResult(transferContext->getColorB());
 
     if (argData.isFlagSet(kCurveFlag))
-        setResult(smoothContext->getCurve());
+        setResult(transferContext->getCurve());
 
     if (argData.isFlagSet(kDepthFlag))
-        setResult(smoothContext->getDepth());
+        setResult(transferContext->getDepth());
 
     if (argData.isFlagSet(kDepthStartFlag))
-        setResult(smoothContext->getDepthStart());
+        setResult(transferContext->getDepthStart());
+
+    if (argData.isFlagSet(kDestinationInfluenceFlag))
+        setResult(transferContext->getDestinationInfluence());
 
     if (argData.isFlagSet(kDrawBrushFlag))
-        setResult(smoothContext->getDrawBrush());
-
-    if (argData.isFlagSet(kDrawRangeFlag))
-        setResult(smoothContext->getDrawRange());
+        setResult(transferContext->getDrawBrush());
 
     if (argData.isFlagSet(kEnterToolCommandFlag))
-        setResult(smoothContext->getEnterToolCommand());
+        setResult(transferContext->getEnterToolCommand());
 
     if (argData.isFlagSet(kExitToolCommandFlag))
-        setResult(smoothContext->getExitToolCommand());
-
-    if (argData.isFlagSet(kFractionOversamplingFlag))
-        setResult(smoothContext->getFractionOversampling());
-
-    if (argData.isFlagSet(kIgnoreLockFlag))
-        setResult(smoothContext->getIgnoreLock());
+        setResult(transferContext->getExitToolCommand());
 
     if (argData.isFlagSet(kKeepShellsTogetherFlag))
-        setResult(smoothContext->getKeepShellsTogether());
+        setResult(transferContext->getKeepShellsTogether());
 
     if (argData.isFlagSet(kLineWidthFlag))
-        setResult(smoothContext->getLineWidth());
+        setResult(transferContext->getLineWidth());
 
     if (argData.isFlagSet(kMessageFlag))
-        setResult(smoothContext->getMessage());
+        setResult(transferContext->getMessage());
 
-    if (argData.isFlagSet(kOversamplingFlag))
-        setResult(smoothContext->getOversampling());
+    if (argData.isFlagSet(kReplaceFlag))
+        setResult(transferContext->getReplace());
 
-    if (argData.isFlagSet(kRangeFlag))
-        setResult(smoothContext->getRange());
+    if (argData.isFlagSet(kReverseFlag))
+        setResult(transferContext->getReverse());
 
     if (argData.isFlagSet(kSizeFlag))
-        setResult(smoothContext->getSize());
+        setResult(transferContext->getSize());
+
+    if (argData.isFlagSet(kSourceInfluenceFlag))
+        setResult(transferContext->getSourceInfluence());
 
     if (argData.isFlagSet(kStrengthFlag))
-        setResult(smoothContext->getStrength());
+        setResult(transferContext->getStrength());
 
     if (argData.isFlagSet(kToleranceFlag))
-        setResult(smoothContext->getTolerance());
+        setResult(transferContext->getTolerance());
 
     if (argData.isFlagSet(kUndersamplingFlag))
-        setResult(smoothContext->getUndersampling());
+        setResult(transferContext->getUndersampling());
 
     if (argData.isFlagSet(kVolumeFlag))
-        setResult(smoothContext->getVolume());
+        setResult(transferContext->getVolume());
 
     return MStatus::kSuccess;
 }
@@ -3759,7 +3551,7 @@ MStatus smoothWeightsContextCmd::doQueryFlags()
 // MIT License
 //
 // Copyright (c) 2018 Ingo Clemens, brave rabbit
-// brSmoothWeights is under the terms of the MIT License
+// brTransferWeights is under the terms of the MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the

@@ -1,0 +1,117 @@
+// ---------------------------------------------------------------------
+// brTransferWeightsOptionValues.mel
+//
+// This script retrieves the values from the context when the tool
+// settings are initialized.
+//
+// ---------------------------------------------------------------------
+
+proc setupScriptJob()
+{
+    scriptJob -runOnce 1 -event "ToolChanged" "global string $gTransferWeightsMesh; $gTransferWeightsMesh = \"\"";
+}
+
+
+global proc brTransferWeightsOptionValues( string $toolName )
+{
+    float $floatVals[];
+    float $floatVal;
+    int $intVal;
+
+    $intVal = eval("brTransferWeightsContext -query -affectSelected " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brTransferWeightsAffectSelectedCheck;
+
+    $floatVals[0] = eval("brTransferWeightsContext -query -colorR " + $toolName);
+    $floatVals[1] = eval("brTransferWeightsContext -query -colorG " + $toolName);
+    $floatVals[2] = eval("brTransferWeightsContext -query -colorB " + $toolName);
+    colorSliderGrp -edit -rgbValue $floatVals[0] $floatVals[1] $floatVals[2] brTransferWeightsBrushColorSlider;
+
+    $intVal = eval("brTransferWeightsContext -query -curve " + $toolName);
+    brTransferWeightsSetSymbolCheckBox $intVal;
+
+    $intVal = eval("brTransferWeightsContext -query -depth " + $toolName);
+    intSliderGrp -edit -value $intVal brTransferWeightsDepth;
+
+    $intVal = eval("brTransferWeightsContext -query -depthStart " + $toolName);
+    intSliderGrp -edit -value $intVal brTransferWeightsDepthStart;
+
+    $intVal = eval("brTransferWeightsContext -query -drawBrush " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brTransferWeightsDrawBrushCheck;
+
+    $intVal = eval("brTransferWeightsContext -query -keepShellsTogether " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brTransferWeightsKeepShellsTogetherCheck;
+
+    $intVal = eval("brTransferWeightsContext -query -lineWidth " + $toolName);
+    intFieldGrp -edit -value1 $intVal brTransferWeightsLineWidthField;
+
+    $intVal = eval("brTransferWeightsContext -query -message " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brTransferWeightsMessageType;
+
+    $intVal = eval("brTransferWeightsContext -query -replace " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brTransferWeightsReplaceCheck;
+
+    $intVal = eval("brTransferWeightsContext -query -reverse " + $toolName);
+    symbolCheckBox -edit -value $intVal brTransferWeightsReverseButton;
+
+    $floatVal = eval("brTransferWeightsContext -query -size " + $toolName);
+    floatSliderGrp -edit -value $floatVal brTransferWeightsSize;
+
+    $floatVal = eval("brTransferWeightsContext -query -strength " + $toolName);
+    floatSliderGrp -edit -value $floatVal brTransferWeightsStrength;
+
+    $floatVal = eval("brTransferWeightsContext -query -tolerance " + $toolName);
+    floatSliderGrp -edit -value $floatVal brTransferWeightsTolerance;
+
+    $intVal = eval("brTransferWeightsContext -query -undersampling " + $toolName);
+    intFieldGrp -edit -value1 $intVal brTransferWeightsBrushUndersamplingField;
+
+    $intVal = eval("brTransferWeightsContext -query -volume " + $toolName);
+    checkBoxGrp -edit -value1 $intVal brTransferWeightsVolumeCheck;
+
+    brTransferWeightsVolumeToggle(eval("brTransferWeightsContext -query -volume " + $toolName));
+}
+
+
+global proc brTransferWeightsValues( string $toolName )
+{
+    string $icon = "brTransferWeights.svg";
+    string $help = "";
+    toolPropertySetCommon $toolName $icon $help;
+
+    frameLayout -edit -enable 1 -collapse 0 brTransferWeightsFrame;
+    brTransferWeightsOptionValues $toolName;
+
+    toolPropertySelect brTransferWeights;
+
+    setupScriptJob;
+    brTransferWeightsSetFieldLabels;
+    brTransferWeightsGetSelection;
+}
+
+// ---------------------------------------------------------------------
+// MIT License
+//
+// Copyright (c) 2018 Ingo Clemens, brave rabbit
+// brTransferWeights is under the terms of the MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Author: Ingo Clemens    www.braverabbit.com
+// ---------------------------------------------------------------------

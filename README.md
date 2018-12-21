@@ -10,7 +10,12 @@ The brush display is customizable as well as the help information.
 
 Feature overview on Vimeo: [brSmoothWeights(https://vimeo.com/304704799)
 
-**brSmoothWeights is under the terms of the MIT License**
+# brTransferWeights
+Tool for transferring weights between influences in Autodesk Maya.
+
+brTransferWeights is a complementary tool for skin weight editing which allows to easily transfer skin cluster weights from one influence to another either by painting or by setting absolute weights. The direction of the transfer can also be quickly reversed. By default the weights from the source influence are added to the destination influence but can also completely replace the previous values.
+
+**brSmoothWeights and brTransferWeights are under the terms of the MIT License**
 
 ## Installation
 
@@ -34,13 +39,15 @@ Inside the modules folder, rename the module template file, which matches your o
 
 Edit the file in a text editor and replace USERNAME in the paths with your user name. Save the file.
 
-Restart Maya. The skin menu in the rigging menu bar should now contain the menu item Paint Smooth Weights Tool.
+Restart Maya. The skin menu in the rigging menu bar should now contain the menu items Paint Smooth Weights Tool and Paint Transfer Weights Tool.
 
 ## Usage:
 
-When properly installed the skin menu in the main Maya rigging menu bar contains a new menu item named Paint Smooth Weights Tool.
+When properly installed the skin menu in the main Maya rigging menu bar contains the new menu items named Paint Smooth Weights Tool and Paint Transfer Weights Tool.
 
 Select the mesh and activate the tool. LMB-drag on the mesh to smooth the skin cluster weights. The mesh needs to be selected when activating the tool.
+
+For the brTransferWeights tool open the tool settings and select a source and destination influence by multi-selecting the items in the influence list. The direction of the transfer can be set with the button between the two influence fields (arrow indicating the direction).
 
 Note:
 The brush circle only displays when the mouse button is pressed. This is due to a missing Qt implementation and still needs to be addressed.
@@ -70,6 +77,15 @@ The strength of the smoothing effect. A value of 1 defines a full averaging with
 
 **Affect Selected**
 Smoothes only the selected vertices. When off only unselected vertices are affected.
+
+**Ignore Lock**
+Smooth the weights of influences even if these are locked.
+
+**Oversampling**
+The number of iterations for the smoothing.
+
+**Fraction Oversampling**
+When smoothing with oversampling the strength value is divided by the number of samples.
 
 **Flood**
 Applies the smoothing to the current selection with the strength value. When only the mesh is selected the entire mesh will be considered.
@@ -102,10 +118,21 @@ Sets the brush circle color.
 Sets the line width of the brush circle.
 
 
-### Latest version: 1.0.0 (2018-12-14)
+### Latest version: 1.1.0 (2018-12-20)
 
 
 ## Changelog:
+
+**1.1.0 (2018-12-20)**
+
+    - Locked influences are now respected when smoothing.
+    - Added an ignore lock option to ignore any locked influences.
+    - Added the complementary brTransferWeights tool for fast shifting of weights between two influences. The new tool is based on the same brush as the smooth weights tool and therefore shares the majority of the settings.
+
+**1.0.1 (2018-12-17)**
+
+    - Added an oversampling option to allow for smoother results in paint and flood mode.
+    - Added the fraction oversampling option which only uses a fraction of the strength per oversampling iteration. It divides the strength value by the number of oversampling steps. This can make the smoothing effect don't appear as harsh when working with higher strength values.
 
 **1.0.0 (2018-12-14)**
 
