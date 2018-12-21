@@ -206,7 +206,7 @@ global proc brTransferWeightsGetSelection()
     string $skin;
     if (`nodeType $node[0]` == "transform")
     {
-        string $shape[] = `listRelatives -shapes -ni -fullPath $node[0]`;
+        string $shape[] = `listRelatives -shapes -noIntermediate -fullPath $node[0]`;
         if (size($shape) == 0)
         {
             brTransferWeightsClear;
