@@ -261,6 +261,10 @@ global proc brSmoothWeightsSetCallbacks( string $parent )
                 brSmoothWeightsVolumeCheck;
 
     frameLayout -edit
+                -collapseCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsInfluenceFrame\", 1)")
+                -expandCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsInfluenceFrame\", 0)")
+                brSmoothWeightsInfluenceFrame;
+    frameLayout -edit
                 -collapseCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsSurfaceFrame\", 1)")
                 -expandCommand ("brSmoothWeightsSetLayoutCollapseState(\"brSmoothWeightsSurfaceFrame\", 0)")
                 brSmoothWeightsSurfaceFrame;
@@ -361,6 +365,8 @@ global proc brSmoothWeightsProperties()
                 button -label "Flood" brSmoothWeightsFloodButton;
                 columnLayout; setParent ..;
             setParent .. ;
+
+            brSmoothWeightsInfluenceList;
 
             frameLayout -label "Surface Smoothing"
                         -labelIndent 3
