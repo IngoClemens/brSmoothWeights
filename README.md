@@ -8,7 +8,7 @@ By default brSmoothWeights smoothes across shell boundaries to maintain the inte
 In addition the new volume-based smoothing allows to smooth across several discontinuous shells whereas the default smoothing is surface based. Volume smoothing should be handled with care as it can easily introduce weights in areas which shouldn't be affected.
 The brush display is customizable as well as the help information.
 
-Feature overview on Vimeo: [brSmoothWeights(https://vimeo.com/304704799)
+Feature overview on Vimeo: [brSmoothWeights](https://vimeo.com/304704799)
 
 # brTransferWeights
 Tool for transferring weights between influences in Autodesk Maya.
@@ -41,7 +41,7 @@ Edit the file in a text editor and replace USERNAME in the paths with your user 
 
 Restart Maya. The skin menu in the rigging menu bar should now contain the menu items Paint Smooth Weights Tool and Paint Transfer Weights Tool.
 
-## Usage:
+## Usage
 
 When properly installed the skin menu in the main Maya rigging menu bar contains the new menu items named Paint Smooth Weights Tool and Paint Transfer Weights Tool.
 
@@ -118,10 +118,18 @@ Sets the brush circle color.
 Sets the line width of the brush circle.
 
 
-### Latest version: 1.1.0 (2018-12-20)
+### Latest version: 1.1.1 (2018-12-30)
 
 
-## Changelog:
+## Changelog
+
+**1.1.1 (2018-12-30)**
+
+    - Added an influence list to the brSmoothWeights tool for easier access for locking/unlocking influences.
+    - Added new menu items to the influence list right-click menu to lock/unlock all influences.
+    - The influence lists are now collapsable and the state gets stored with the preferences.
+    - Fixed that the wrong influence gets locked/unlocked when a different influence is selected.
+    - Fixed that the mesh selection is limited to non-intermediate mesh shapes only.
 
 **1.1.0 (2018-12-20)**
 

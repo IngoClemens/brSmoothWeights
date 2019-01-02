@@ -256,6 +256,10 @@ global proc brTransferWeightsSetCallbacks( string $parent )
                 brTransferWeightsVolumeCheck;
 
     frameLayout -edit
+                -collapseCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsInfluenceFrame\", 1)")
+                -expandCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsInfluenceFrame\", 0)")
+                brTransferWeightsInfluenceFrame;
+    frameLayout -edit
                 -collapseCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsSurfaceFrame\", 1)")
                 -expandCommand ("brTransferWeightsSetLayoutCollapseState(\"brTransferWeightsSurfaceFrame\", 0)")
                 brTransferWeightsSurfaceFrame;

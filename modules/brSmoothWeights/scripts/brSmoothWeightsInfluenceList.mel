@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------
-// brTransferWeightsInfluenceList.mel
+// brSmoothWeightsInfluenceList.mel
 //
-// This script creates and handles the influence list for the transfer
+// This script creates and handles the influence list for the smooth
 // weights tool.
 //
 // ---------------------------------------------------------------------
@@ -13,7 +13,7 @@
 
 //
 // Procedure Name:
-//      brTransferWeightsSearchJointString
+//      brSmoothWeightsSearchJointString
 //
 // Description:
 //      Go through the list of influences and check which items match
@@ -26,10 +26,10 @@
 // Return Value:
 //      None
 //
-global proc brTransferWeightsSearchJointString()
+global proc brSmoothWeightsSearchJointString()
 {
-    string $query = `textFieldGrp -query -text brTransferWeightsSearchField`;
-    string $items[] = `treeView -query -children "" brTransferWeightsJointTree`;
+    string $query = `textFieldGrp -query -text brSmoothWeightsSearchField`;
+    string $items[] = `treeView -query -children "" brSmoothWeightsJointTree`;
 
     string $queryList[];
     tokenize $query "+" $queryList;
@@ -42,14 +42,14 @@ global proc brTransferWeightsSearchJointString()
             if (`gmatch $i ("*" + $q + "*")`)
                 $state = 1;
         }
-        treeView -edit -itemVisible $i $state brTransferWeightsJointTree;
+        treeView -edit -itemVisible $i $state brSmoothWeightsJointTree;
     }
 }
 
 
 //
 // Procedure Name:
-//      brTransferWeightsClearSearch
+//      brSmoothWeightsClearSearch
 //
 // Description:
 //      Set all influence items in the list to visible and clear the
@@ -61,17 +61,17 @@ global proc brTransferWeightsSearchJointString()
 // Return Value:
 //      None
 //
-global proc brTransferWeightsClearSearch()
+global proc brSmoothWeightsClearSearch()
 {
-    string $items[] = `treeView -query -children "" brTransferWeightsJointTree`;
+    string $items[] = `treeView -query -children "" brSmoothWeightsJointTree`;
 
-    textFieldGrp -edit -text "" brTransferWeightsSearchField;
+    textFieldGrp -edit -text "" brSmoothWeightsSearchField;
 
     if (size($items) == 0)
         return;
 
     for ($i in $items)
-        treeView -edit -itemVisible $i 1 brTransferWeightsJointTree;
+        treeView -edit -itemVisible $i 1 brSmoothWeightsJointTree;
 }
 
 
@@ -81,12 +81,10 @@ global proc brTransferWeightsClearSearch()
 
 //
 // Procedure Name:
-//      brTransferWeightsSelectAffectedVertices
+//      brSmoothWeightsSelectAffectedVertices
 //
 // Description:
 //      Select all vertices which are affected by the given influence.
-//      This procedure gets called when douple-clicking an influence in
-//      the list.
 //
 // Input Arguments:
 //      string item         The name of the influence.
@@ -94,20 +92,20 @@ global proc brTransferWeightsClearSearch()
 // Return Value:
 //      None
 //
-global proc brTransferWeightsSelectAffectedVertices( string $item )
+global proc brSmoothWeightsSelectAffectedVertices( string $item )
 {
-    global string $gTransferWeightsMesh;
-    global string $gTransferWeightsSkinCluster;
+    global string $gSmoothWeightsMesh;
+    global string $gSmoothWeightsSkinCluster;
 
     select -cl;
-    skinCluster -edit -selectInfluenceVerts $item $gTransferWeightsSkinCluster;
-    doMenuComponentSelection($gTransferWeightsMesh, "vertex");
+    skinCluster -edit -selectInfluenceVerts $item $gSmoothWeightsSkinCluster;
+    doMenuComponentSelection($gSmoothWeightsMesh, "vertex");
 }
 
 
 //
 // Procedure Name:
-//      brTransferWeightsSelectAffectedVerticesFromMenu
+//      brSmoothWeightsSelectAffectedVerticesFromMenu
 //
 // Description:
 //      Select vertices which are affected by the selected influence/s.
@@ -127,12 +125,12 @@ global proc brTransferWeightsSelectAffectedVertices( string $item )
 // Return Value:
 //      None
 //
-global proc brTransferWeightsSelectAffectedVerticesFromMenu( int $add, int $remove )
+global proc brSmoothWeightsSelectAffectedVerticesFromMenu( int $add, int $remove )
 {
-    global string $gTransferWeightsMesh;
-    global string $gTransferWeightsSkinCluster;
+    global string $gSmoothWeightsMesh;
+    global string $gSmoothWeightsSkinCluster;
 
-    string $joints[] = `treeView -query -selectItem brTransferWeightsJointTree`;
+    string $joints[] = `treeView -query -selectItem brSmoothWeightsJointTree`;
 
     if (!size($joints))
         return;
@@ -150,139 +148,10 @@ global proc brTransferWeightsSelectAffectedVerticesFromMenu( int $add, int $remo
     else if ($remove)
         $cmd += "-removeFromSelection ";
 
-    $cmd += $gTransferWeightsSkinCluster;
+    $cmd += $gSmoothWeightsSkinCluster;
     eval $cmd;
 
-    doMenuComponentSelection($gTransferWeightsMesh, "vertex");
-}
-
-
-//
-// Procedure Name:
-//      brTransferWeightsSetTransferIndices
-//
-// Description:
-//      Get the names of the source and destination influences for the
-//      transfer and find their indices in the influence list. If an
-//      influence doesn't exist the index will be set to -1. Set the
-//      indices for the current context.
-//      Also handle the display of the names in the fields. Non-existing
-//      influences are displayed with an oblique font.
-//
-// Input Arguments:
-//      None
-//
-// Return Value:
-//      None
-//
-global proc brTransferWeightsSetTransferIndices()
-{
-    global string $gTransferWeightsJoints[];
-
-    string $source = `textField -query -text brTransferWeightsSourceInfluenceField`;
-    string $destination = `textField -query -text brTransferWeightsDestinationInfluenceField`;
-
-    int $src = stringArrayFind($source, 0, $gTransferWeightsJoints);
-    int $dest = stringArrayFind($destination, 0, $gTransferWeightsJoints);
-
-    string $fontSource = "plainLabelFont";
-    if ($src == -1)
-        $fontSource = "obliqueLabelFont";
-    string $fontDestination = "plainLabelFont";
-    if ($dest == -1)
-        $fontDestination = "obliqueLabelFont";
-
-    textField -edit -font $fontSource brTransferWeightsSourceInfluenceField;
-    textField -edit -font $fontDestination brTransferWeightsDestinationInfluenceField;
-
-    string $cmd = "brTransferWeightsContext -edit ";
-    $cmd += "-sourceInfluence " + $src + " ";
-    $cmd += "-destinationInfluence " + $dest + " ";
-    $cmd += "`currentCtx`;";
-
-    evalEcho($cmd);
-}
-
-
-//
-// Procedure Name:
-//      brTransferWeightsSelectionChanged
-//
-// Description:
-//      Track the order of the influence selection in the list by
-//      matching the current and last selected influence with the names
-//      stored in the optionVars.
-//      Display the influence names in the source and destination
-//      fields.
-//
-// Input Arguments:
-//      None
-//
-// Return Value:
-//      None
-//
-global proc brTransferWeightsSelectionChanged()
-{
-    string $joints[] = `treeView -query -selectItem brTransferWeightsJointTree`;
-    string $joint;
-
-    string $source = "";
-    string $destination = "";
-
-    // store the current and previous joint
-    string $lastJoint = "";
-    if (`optionVar -exists "brTransferWeightsSelectedJoint"`)
-        $lastJoint = `optionVar -query "brTransferWeightsSelectedJoint"`;
-    optionVar -stringValue "brTransferWeightsLastSelectedJoint" $lastJoint;
-
-    if (size($joints) != 0)
-    {
-        $source = $joints[0];
-
-        if (size($joints) == 2)
-        {
-            $source = $lastJoint;
-
-            $joints = stringArrayRemove({$lastJoint}, $joints);
-            $destination = $joints[0];
-        }
-        $joint = $joints[0];
-    }
-    optionVar -stringValue "brTransferWeightsSelectedJoint" $joint;
-
-    textField -edit -text $source brTransferWeightsSourceInfluenceField;
-    textField -edit -text $destination brTransferWeightsDestinationInfluenceField;
-
-    brTransferWeightsSetTransferIndices;
-}
-
-
-//
-// Procedure Name:
-//      brTransferWeightsSetFieldLabels
-//
-// Description:
-//      Set the labels for the source and destination influence fields
-//      based on the direction of the transfer.
-//
-// Input Arguments:
-//      None
-//
-// Return Value:
-//      None
-//
-global proc brTransferWeightsSetFieldLabels()
-{
-    string $src = "Source";
-    string $dest = "Destination";
-    if (`symbolCheckBox -query -value brTransferWeightsReverseButton`)
-    {
-        $dest = "Source";
-        $src = "Destination";
-    }
-
-    text -edit -label $src brTransferWeightsSourceLabel;
-    text -edit -label $dest brTransferWeightsDestinationLabel;
+    doMenuComponentSelection($gSmoothWeightsMesh, "vertex");
 }
 
 
@@ -318,7 +187,7 @@ proc string getSkinCluster( string $shape )
 
 //
 // Procedure Name:
-//      brTransferWeightsGetSelection
+//      brSmoothWeightsGetSelection
 //
 // Description:
 //      Get the mesh shape node of the current selection. If the
@@ -331,15 +200,15 @@ proc string getSkinCluster( string $shape )
 // Return Value:
 //      None
 //
-global proc brTransferWeightsGetSelection()
+global proc brSmoothWeightsGetSelection()
 {
-    global string $gTransferWeightsMesh;
-    global string $gTransferWeightsSkinCluster;
+    global string $gSmoothWeightsMesh;
+    global string $gSmoothWeightsSkinCluster;
 
     string $sel[] = `ls -selection -long`;
     if (size($sel) == 0)
     {
-        brTransferWeightsClear;
+        brSmoothWeightsClear;
         return;
     }
 
@@ -352,7 +221,7 @@ global proc brTransferWeightsGetSelection()
         string $shape[] = `listRelatives -shapes -noIntermediate -fullPath $node[0]`;
         if (size($shape) == 0)
         {
-            brTransferWeightsClear;
+            brSmoothWeightsClear;
             return;
         }
         $node[0] = $shape[0];
@@ -366,24 +235,23 @@ global proc brTransferWeightsGetSelection()
     if ($skin != "")
     {
         int $newMesh = 1;
-        if ($gTransferWeightsMesh == $node[0])
+        if ($gSmoothWeightsMesh == $node[0])
             $newMesh = 0;
-        $gTransferWeightsMesh = $node[0];
-        $gTransferWeightsSkinCluster = $skin;
-        brTransferWeightsListInfluences($skin, $newMesh);
+        $gSmoothWeightsMesh = $node[0];
+        $gSmoothWeightsSkinCluster = $skin;
+        brSmoothWeightsListInfluences($skin, $newMesh);
     }
     else
-        brTransferWeightsClear;
+        brSmoothWeightsClear;
 }
 
 
 //
 // Procedure Name:
-//      brTransferWeightsClear
+//      brSmoothWeightsClear
 //
 // Description:
-//      Clear the influence list, source and destination fields and also
-//      remove the indices from the current context.
+//      Clear the influence list.
 //
 // Input Arguments:
 //      None
@@ -391,12 +259,9 @@ global proc brTransferWeightsGetSelection()
 // Return Value:
 //      None
 //
-global proc brTransferWeightsClear()
+global proc brSmoothWeightsClear()
 {
-    treeView -edit -removeAll brTransferWeightsJointTree;
-    textField -edit -text "" brTransferWeightsSourceInfluenceField;
-    textField -edit -text "" brTransferWeightsDestinationInfluenceField;
-    brTransferWeightsContext -edit -sourceInfluence -1 -destinationInfluence -1 `currentCtx`;
+    treeView -edit -removeAll brSmoothWeightsJointTree;
 }
 
 
@@ -406,7 +271,7 @@ global proc brTransferWeightsClear()
 
 //
 // Procedure Name:
-//      brTransferWeightsListInfluences
+//      brSmoothWeightsListInfluences
 //
 // Description:
 //      Get all influences of the given skin cluster and populate the
@@ -426,21 +291,21 @@ global proc brTransferWeightsClear()
 // Return Value:
 //      None
 //
-global proc brTransferWeightsListInfluences( string $skin, int $newMesh )
+global proc brSmoothWeightsListInfluences( string $skin, int $newMesh )
 {
-    global string $gTransferWeightsJoints[];
+    global string $gSmoothWeightsJoints[];
 
     int $refresh = 1;
 
     string $joints[] = `skinCluster -query -influence $skin`;
-    if (!$newMesh && size($gTransferWeightsJoints) == size($joints))
+    if (!$newMesh && size($gSmoothWeightsJoints) == size($joints))
         $refresh = 0;
 
     if ($refresh)
     {
-        $gTransferWeightsJoints = $joints;
+        $gSmoothWeightsJoints = $joints;
 
-        treeView -edit -removeAll brTransferWeightsJointTree;
+        treeView -edit -removeAll brSmoothWeightsJointTree;
 
         // The listing of influences has been extracted from the
         // procedure skinClusterInflPopulate() in the file
@@ -471,7 +336,7 @@ global proc brTransferWeightsListInfluences( string $skin, int $newMesh )
                 $inflParent = $inflList[$inflListParentIndexes[$i]];
             }
 
-            brTransferWeightsAddInfluenceToList $infl $inflParent;
+            brSmoothWeightsAddInfluenceToList $infl $inflParent;
         }
     }
 }
@@ -505,7 +370,7 @@ proc string getLockImage( string $item )
 
 //
 // Procedure Name:
-//      brTransferWeightsAddInfluenceToList
+//      brSmoothWeightsAddInfluenceToList
 //
 // Description:
 //      Add the given item with the given parent to the influence list.
@@ -517,16 +382,16 @@ proc string getLockImage( string $item )
 // Return Value:
 //      None
 //
-global proc brTransferWeightsAddInfluenceToList( string $item, string $parent )
+global proc brSmoothWeightsAddInfluenceToList( string $item, string $parent )
 {
     string $lock = getLockImage($item);
     treeView -edit
              -addItem $item $parent
-             -pressCommand 1 brTransferWeightsToggleLockState
-             brTransferWeightsJointTree;
+             -pressCommand 1 brSmoothWeightsToggleLockState
+             brSmoothWeightsJointTree;
     treeView -edit
              -image $item 1 $lock
-             brTransferWeightsJointTree;
+             brSmoothWeightsJointTree;
 }
 
 
@@ -552,7 +417,7 @@ proc toggleLockState( string $joints[] )
             int $lock = `getAttr($joint + ".liw")`;
             setAttr($joint + ".liw", !$lock);
             string $image = getLockImage($joint);
-            treeView -edit -image $joint 1 $image brTransferWeightsJointTree;
+            treeView -edit -image $joint 1 $image brSmoothWeightsJointTree;
         }
     }
 }
@@ -560,7 +425,7 @@ proc toggleLockState( string $joints[] )
 
 //
 // Procedure Name:
-//      brTransferWeightsToggleLockState
+//      brSmoothWeightsToggleLockState
 //
 // Description:
 //      Invert the locked state for either the given item passed by the
@@ -575,9 +440,9 @@ proc toggleLockState( string $joints[] )
 // Return Value:
 //      None
 //
-global proc brTransferWeightsToggleLockState( string $button, int $state )
+global proc brSmoothWeightsToggleLockState( string $button, int $state )
 {
-    string $joints[] = `treeView -query -selectItem brTransferWeightsJointTree`;
+    string $joints[] = `treeView -query -selectItem brSmoothWeightsJointTree`;
     if ($button != "")
         toggleLockState({$button});
     else
@@ -587,7 +452,7 @@ global proc brTransferWeightsToggleLockState( string $button, int $state )
 
 //
 // Procedure Name:
-//      brTransferWeightsInvertLockState
+//      brSmoothWeightsInvertLockState
 //
 // Description:
 //      Invert the locked state for all items in the list.
@@ -598,16 +463,16 @@ global proc brTransferWeightsToggleLockState( string $button, int $state )
 // Return Value:
 //      None
 //
-global proc brTransferWeightsInvertLockState()
+global proc brSmoothWeightsInvertLockState()
 {
-    string $joints[] = `treeView -query -children "" brTransferWeightsJointTree`;
+    string $joints[] = `treeView -query -children "" brSmoothWeightsJointTree`;
     toggleLockState($joints);
 }
 
 
 //
 // Procedure Name:
-//      brTransferWeightsLockInfluence
+//      brSmoothWeightsLockInfluence
 //
 // Description:
 //      Set the locked state for either all unselected, all selected
@@ -624,10 +489,10 @@ global proc brTransferWeightsInvertLockState()
 // Return Value:
 //      None
 //
-global proc brTransferWeightsLockInfluence( int $choice, int $state )
+global proc brSmoothWeightsLockInfluence( int $choice, int $state )
 {
-    string $sel[] = `treeView -query -selectItem brTransferWeightsJointTree`;
-    string $all[] = `treeView -query -children "" brTransferWeightsJointTree`;
+    string $sel[] = `treeView -query -selectItem brSmoothWeightsJointTree`;
+    string $all[] = `treeView -query -children "" brSmoothWeightsJointTree`;
 
     string $joints[];
     // unselected
@@ -646,7 +511,7 @@ global proc brTransferWeightsLockInfluence( int $choice, int $state )
         {
             setAttr($joint + ".liw", $state);
             string $image = getLockImage($joint);
-            treeView -edit -image $joint 1 $image brTransferWeightsJointTree;
+            treeView -edit -image $joint 1 $image brSmoothWeightsJointTree;
         }
     }
 }
@@ -658,7 +523,7 @@ global proc brTransferWeightsLockInfluence( int $choice, int $state )
 
 //
 // Procedure Name:
-//      brTransferWeightsInfluenceList
+//      brSmoothWeightsInfluenceList
 //
 // Description:
 //      Build all control items for the influence list in the tool
@@ -670,31 +535,17 @@ global proc brTransferWeightsLockInfluence( int $choice, int $state )
 // Return Value:
 //      None
 //
-global proc brTransferWeightsInfluenceList()
+global proc brSmoothWeightsInfluenceList()
 {
     frameLayout -label "Influences"
                 -labelIndent 3
                 -collapsable 1
-                -collapse (`optionVar -query "brTransferWeightsInfluenceFrameState"`)
+                -collapse (`optionVar -query "brSmoothWeightsInfluenceFrameState"`)
                 -marginWidth 10
                 -marginHeight 5
-                brTransferWeightsInfluenceFrame;
+                brSmoothWeightsInfluenceFrame;
 
         string $influenceForm = `formLayout`;
-
-            text -label "Source" brTransferWeightsSourceLabel;
-            string $labelDivider = `text -label ""`;
-            text -label "Destination" brTransferWeightsDestinationLabel;
-
-            textField -placeholderText "Select from list or enter name"
-                      -changeCommand brTransferWeightsSetTransferIndices
-                      brTransferWeightsSourceInfluenceField;
-            symbolCheckBox  -onImage "brTransferWeightsArrowLeft.png"
-                            -offImage "brTransferWeightsArrowRight.png"
-                            brTransferWeightsReverseButton;
-            textField -placeholderText "Select from list or enter name"
-                      -changeCommand brTransferWeightsSetTransferIndices
-                      brTransferWeightsDestinationInfluenceField;
 
             textFieldGrp -label ""
                          -placeholderText "Enter search string. Use + for combinations"
@@ -702,12 +553,12 @@ global proc brTransferWeightsInfluenceList()
                          -columnAttach2 "left" "right"
                          -columnOffset2 0 0
                          -adjustableColumn2 2
-                         -tcc brTransferWeightsSearchJointString
-                         brTransferWeightsSearchField;
+                         -tcc brSmoothWeightsSearchJointString
+                         brSmoothWeightsSearchField;
             string $clearButton = `button -label "Clear"
                                           -width 46
                                           -command
-                                          brTransferWeightsClearSearch`;
+                                          brSmoothWeightsClearSearch`;
 
             // ---------------------------------------------------------
             // influence list
@@ -717,83 +568,51 @@ global proc brTransferWeightsInfluenceList()
                      -attachButtonRight 0
                      -allowDragAndDrop 1
                      -allowReparenting 0
-                     -selectionChangedCommand brTransferWeightsSelectionChanged
-                     -itemDblClickCommand brTransferWeightsSelectAffectedVertices
-                     brTransferWeightsJointTree;
+                     -itemDblClickCommand brSmoothWeightsSelectAffectedVertices
+                     brSmoothWeightsJointTree;
 
             popupMenu;
                 menuItem -label "Toggle Lock"
-                         -command "brTransferWeightsToggleLockState(\"\", 0)";
+                         -command "brSmoothWeightsToggleLockState(\"\", 0)";
                 menuItem -label "Invert All Locks"
-                         -command "brTransferWeightsInvertLockState";
+                         -command "brSmoothWeightsInvertLockState";
                 menuItem -divider 1;
                 menuItem -label "Lock Selected"
-                         -command "brTransferWeightsLockInfluence(1, 1)";
+                         -command "brSmoothWeightsLockInfluence(1, 1)";
                 menuItem -label "Unlock Selected"
-                         -command "brTransferWeightsLockInfluence(1, 0)";
+                         -command "brSmoothWeightsLockInfluence(1, 0)";
                 menuItem -label "Lock Unselected"
-                         -command "brTransferWeightsLockInfluence(0, 1)";
+                         -command "brSmoothWeightsLockInfluence(0, 1)";
                 menuItem -label "Unlock Unselected"
-                         -command "brTransferWeightsLockInfluence(0, 0)";
+                         -command "brSmoothWeightsLockInfluence(0, 0)";
                 menuItem -divider 1;
                 menuItem -label "Lock All"
-                         -command "brTransferWeightsLockInfluence(2, 1)";
+                         -command "brSmoothWeightsLockInfluence(2, 1)";
                 menuItem -label "Unlock All"
-                         -command "brTransferWeightsLockInfluence(2, 0)";
+                         -command "brSmoothWeightsLockInfluence(2, 0)";
                 menuItem -divider 1;
                 menuItem -label "Select Affected Vertices"
-                         -command "brTransferWeightsSelectAffectedVerticesFromMenu(0, 0)";
+                         -command "brSmoothWeightsSelectAffectedVerticesFromMenu(0, 0)";
                 menuItem -label "Add Affected Vertices To Selection"
-                         -command "brTransferWeightsSelectAffectedVerticesFromMenu(1, 0)";
+                         -command "brSmoothWeightsSelectAffectedVerticesFromMenu(1, 0)";
                 menuItem -label "Remove Affected Vertices From Selection"
-                         -command "brTransferWeightsSelectAffectedVerticesFromMenu(0, 1)";
+                         -command "brSmoothWeightsSelectAffectedVerticesFromMenu(0, 1)";
 
             formLayout -edit
 
-                       -attachForm brTransferWeightsSourceLabel "top" 5
-                       -attachForm brTransferWeightsSourceLabel "left" 2
+                       -attachForm brSmoothWeightsSearchField "top" 5
+                       -attachForm brSmoothWeightsSearchField "left" 0
 
-                       -attachForm $labelDivider "top" 1
-
-                       -attachForm brTransferWeightsDestinationLabel "top" 5
-                       -attachForm brTransferWeightsDestinationLabel "right" 0
-
-                       -attachForm brTransferWeightsSourceInfluenceField "left" 3
-
-                       -attachForm brTransferWeightsDestinationInfluenceField "right" 0
-
-                       -attachForm brTransferWeightsSearchField "left" 0
-
+                       -attachForm $clearButton "top" 5
                        -attachForm $clearButton "right" 0
 
-                       -attachForm brTransferWeightsJointTree "left" 5
-                       -attachForm brTransferWeightsJointTree "right" 0
-                       -attachForm brTransferWeightsJointTree "bottom" 0
+                       -attachForm brSmoothWeightsJointTree "left" 5
+                       -attachForm brSmoothWeightsJointTree "right" 0
+                       -attachForm brSmoothWeightsJointTree "bottom" 0
 
-                       -attachPosition $labelDivider "left" 0 45
-                       -attachPosition $labelDivider "right" 0 55
+                       -attachControl brSmoothWeightsSearchField "right" 2 $clearButton
 
-                       -attachControl brTransferWeightsSourceLabel "right" 5 $labelDivider
-
-                       -attachControl brTransferWeightsDestinationLabel "left" 5 $labelDivider
-
-                       -attachControl brTransferWeightsReverseButton "top" 0 $labelDivider
-
-                       -attachPosition brTransferWeightsReverseButton "left" 0 45
-                       -attachPosition brTransferWeightsReverseButton "right" 0 55
-
-                       -attachControl brTransferWeightsSourceInfluenceField "top" 5 brTransferWeightsSourceLabel
-                       -attachControl brTransferWeightsSourceInfluenceField "right" 5 brTransferWeightsReverseButton
-
-                       -attachControl brTransferWeightsDestinationInfluenceField "top" 5 brTransferWeightsDestinationLabel
-                       -attachControl brTransferWeightsDestinationInfluenceField "left" 5 brTransferWeightsReverseButton
-
-                       -attachControl brTransferWeightsSearchField "top" 15 brTransferWeightsSourceInfluenceField
-                       -attachControl brTransferWeightsSearchField "right" 2 $clearButton
-
-                       -attachControl $clearButton "top" 15 brTransferWeightsDestinationInfluenceField
-
-                       -attachControl brTransferWeightsJointTree "top" 5 brTransferWeightsSearchField
+                       -attachControl brSmoothWeightsJointTree "top" 5 brSmoothWeightsSearchField
 
                        $influenceForm;
 
@@ -806,7 +625,7 @@ global proc brTransferWeightsInfluenceList()
 // MIT License
 //
 // Copyright (c) 2018 Ingo Clemens, brave rabbit
-// brTransferWeights is under the terms of the MIT License
+// brSmoothWeights is under the terms of the MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
