@@ -33,6 +33,8 @@ global proc brSmoothWeightsAddMenuCommand()
         menu -edit
              -postMenuCommand "brSmoothWeightsCreateMenuItems"
              $gRigSkinningMenu;
+
+    source dagMenuProc;
 }
 
 

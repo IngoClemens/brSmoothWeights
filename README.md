@@ -118,10 +118,14 @@ Sets the brush circle color.
 Sets the line width of the brush circle.
 
 
-### Latest version: 1.1.1 (2018-12-30)
+### Latest version: 1.1.2 (2019-01-02)
 
 
 ## Changelog
+
+**1.1.2 (2019-01-02)**
+
+    - Fixed a minor script error with Maya 2016.5 and below which occurs when trying to select affected influences through the influence list without having invoked the default Maya right-click menu yet.
 
 **1.1.1 (2018-12-30)**
 
