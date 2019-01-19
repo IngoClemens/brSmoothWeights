@@ -6,3 +6,6 @@ plug-ins: plug-ins/macOS/2017
 
 + MAYAVERSION:2018 brSmoothWeights any /Users/USERNAME/Library/Preferences/Autodesk/maya/modules/brSmoothWeights
 plug-ins: plug-ins/macOS/2018
+
++ MAYAVERSION:2019 brSmoothWeights any /Users/USERNAME/Library/Preferences/Autodesk/maya/modules/brSmoothWeights
+plug-ins: plug-ins/macOS/2019

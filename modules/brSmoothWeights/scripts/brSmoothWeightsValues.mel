@@ -8,7 +8,8 @@
 
 proc setupScriptJob()
 {
-    scriptJob -runOnce 1 -event "ToolChanged" "global string $gSmoothWeightsMesh; $gSmoothWeightsMesh = \"\"";
+    scriptJob -event "NewSceneOpened" "global string $gSmoothWeightsMesh; $gSmoothWeightsMesh = \"\"";
+    scriptJob -event "SceneOpened" "global string $gSmoothWeightsMesh; $gSmoothWeightsMesh = \"\"";
 }
 
 
@@ -92,7 +93,15 @@ global proc brSmoothWeightsValues( string $toolName )
 
     toolPropertySelect brSmoothWeights;
 
-    setupScriptJob;
+    // Set up the script job for clearing the $gSmoothWeightsMesh global
+    // when creating a new scene or opening a scene.
+    global int $gSmoothWeightsInit;
+    if (!$gSmoothWeightsInit)
+    {
+        setupScriptJob;
+        $gSmoothWeightsInit = 1;
+    }
+
     brSmoothWeightsGetSelection;
 }
 

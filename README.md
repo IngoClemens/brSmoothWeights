@@ -118,10 +118,16 @@ Sets the brush circle color.
 Sets the line width of the brush circle.
 
 
-### Latest version: 1.1.2 (2019-01-02)
+### Latest version: 1.1.3 (2019-01-18)
 
 
 ## Changelog
+
+**1.1.3 (2019-01-18)**
+
+    - When re-selecting the tools the last influence selection as well as search string, if any, gets remembered.
+    - Fixed a smaller issue where the influence list gets rebuilt every time the tool gets selected even though the selected mesh didn't change. This caused a lag when activating the tool with larger hierarchies.
+    - Fixed an unnecessary error output to the linux terminal.
 
 **1.1.2 (2019-01-02)**
 

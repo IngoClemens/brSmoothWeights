@@ -12,6 +12,16 @@
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
 
+// Macro for the press/drag/release methods in case there is nothing
+// selected or the tool gets applied outside any geometry. If the actual
+// MStatus would get returned an error can get listed in terminal on
+// Linux. But it's unnecessary and needs to be avoided. Therefore a
+// kSuccess is returned just for the sake of being invisible.
+#define CHECK_MSTATUS_AND_RETURN_SILENT(status) \
+if (status != MStatus::kSuccess)                \
+	return MStatus::kSuccess;                   \
+
+
 // ---------------------------------------------------------------------
 // the tool
 // ---------------------------------------------------------------------
@@ -697,7 +707,7 @@ void transferWeightsContext::getClassName(MString &name) const
 MStatus transferWeightsContext::doPress(MEvent &event)
 {
     selectionStatus = doPressCommon(event);
-    CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
+    CHECK_MSTATUS_AND_RETURN_SILENT(selectionStatus);
 
     doDrag(event);
     return MStatus::kSuccess;
@@ -706,12 +716,12 @@ MStatus transferWeightsContext::doPress(MEvent &event)
 
 MStatus transferWeightsContext::doDrag(MEvent &event)
 {
-    CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
+    CHECK_MSTATUS_AND_RETURN_SILENT(selectionStatus);
 
     MStatus status = MStatus::kSuccess;
 
     status = doDragCommon(event);
-    CHECK_MSTATUS_AND_RETURN_IT(status);
+    CHECK_MSTATUS_AND_RETURN_SILENT(status);
 
     // To draw a view oriented circle in 3d space get the model view
     // matrix and reset the translation and scale. The points to draw
@@ -791,7 +801,7 @@ void transferWeightsContext::drawCircle(MPoint point, MMatrix mat, double radius
 
 MStatus transferWeightsContext::doRelease(MEvent &event)
 {
-    CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
+    CHECK_MSTATUS_AND_RETURN_SILENT(selectionStatus);
 
     doReleaseCommon(event);
     return MStatus::kSuccess;
@@ -807,7 +817,7 @@ MStatus transferWeightsContext::doPress(MEvent &event,
                                         const MHWRender::MFrameContext &context)
 {
     selectionStatus = doPressCommon(event);
-    CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
+    CHECK_MSTATUS_AND_RETURN_SILENT(selectionStatus);
 
     doDrag(event, drawMgr, context);
     return MStatus::kSuccess;
@@ -818,12 +828,12 @@ MStatus transferWeightsContext::doDrag(MEvent &event,
                                        MHWRender::MUIDrawManager &drawManager,
                                        const MHWRender::MFrameContext &context)
 {
-    CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
+    CHECK_MSTATUS_AND_RETURN_SILENT(selectionStatus);
 
     MStatus status = MStatus::kSuccess;
 
     status = doDragCommon(event);
-    CHECK_MSTATUS_AND_RETURN_IT(status);
+    CHECK_MSTATUS_AND_RETURN_SILENT(status);
 
     drawManager.beginDrawable();
 
@@ -878,7 +888,7 @@ MStatus transferWeightsContext::doRelease(MEvent &event,
                                           MHWRender::MUIDrawManager &drawMgr,
                                           const MHWRender::MFrameContext &context)
 {
-    CHECK_MSTATUS_AND_RETURN_IT(selectionStatus);
+    CHECK_MSTATUS_AND_RETURN_SILENT(selectionStatus);
 
     doReleaseCommon(event);
     return MStatus::kSuccess;
@@ -1556,7 +1566,7 @@ void transferWeightsContext::getSkinClusterAttributes(MObject skinCluster, unsig
     // Get the settings from the skin cluster node.
     MFnDependencyNode skinMFn(skinCluster);
 
-    MPlug normalizePlug = skinMFn.findPlug("normalizeWeights");
+    MPlug normalizePlug = skinMFn.findPlug("normalizeWeights", false);
     normalize = (unsigned)normalizePlug.asInt();
 }
 

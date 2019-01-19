@@ -6,3 +6,6 @@ plug-ins: plug-ins/linux64/2017
 
 + MAYAVERSION:2018 brSmoothWeights any /home/USERNAME/maya/modules/brSmoothWeights
 plug-ins: plug-ins/linux64/2018
+
++ MAYAVERSION:2019 brSmoothWeights any /home/USERNAME/maya/modules/brSmoothWeights
+plug-ins: plug-ins/linux64/2019

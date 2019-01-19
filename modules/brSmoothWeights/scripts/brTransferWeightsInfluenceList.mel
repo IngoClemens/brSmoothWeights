@@ -13,6 +13,30 @@
 
 //
 // Procedure Name:
+//      clearRecall
+//
+// Description:
+//      Remove the optionVars which help to recall the last selection
+//      and search filter.
+//
+// Input Arguments:
+//      None
+//
+// Return Value:
+//      None
+//
+proc clearRecall()
+{
+    global string $gTransferWeightsSearchString;
+    global string $gTransferWeightsInfluenceSelection[];
+
+    $gTransferWeightsSearchString = "";
+    $gTransferWeightsInfluenceSelection = {};
+}
+
+
+//
+// Procedure Name:
 //      brTransferWeightsSearchJointString
 //
 // Description:
@@ -102,6 +126,9 @@ global proc brTransferWeightsSelectAffectedVertices( string $item )
     select -cl;
     skinCluster -edit -selectInfluenceVerts $item $gTransferWeightsSkinCluster;
     doMenuComponentSelection($gTransferWeightsMesh, "vertex");
+
+    if (!size(`ls -selection`))
+        select -replace $gTransferWeightsMesh;
 }
 
 
@@ -154,6 +181,9 @@ global proc brTransferWeightsSelectAffectedVerticesFromMenu( int $add, int $remo
     eval $cmd;
 
     doMenuComponentSelection($gTransferWeightsMesh, "vertex");
+
+    if (!size(`ls -selection`))
+        select -replace $gTransferWeightsMesh;
 }
 
 
@@ -223,6 +253,8 @@ global proc brTransferWeightsSetTransferIndices()
 //
 global proc brTransferWeightsSelectionChanged()
 {
+    global string $gTransferWeightsInfluenceSelection[];
+
     string $joints[] = `treeView -query -selectItem brTransferWeightsJointTree`;
     string $joint;
 
@@ -254,6 +286,8 @@ global proc brTransferWeightsSelectionChanged()
     textField -edit -text $destination brTransferWeightsDestinationInfluenceField;
 
     brTransferWeightsSetTransferIndices;
+
+    $gTransferWeightsInfluenceSelection = {$source, $destination};
 }
 
 
@@ -350,7 +384,7 @@ global proc brTransferWeightsGetSelection()
     if (`nodeType $node[0]` == "transform")
     {
         string $shape[] = `listRelatives -shapes -noIntermediate -fullPath $node[0]`;
-        if (size($shape) == 0)
+        if (size($shape) == 0 || `nodeType $shape[0]` != "mesh")
         {
             brTransferWeightsClear;
             return;
@@ -393,10 +427,14 @@ global proc brTransferWeightsGetSelection()
 //
 global proc brTransferWeightsClear()
 {
+    global string $gTransferWeightsMesh;
+
     treeView -edit -removeAll brTransferWeightsJointTree;
     textField -edit -text "" brTransferWeightsSourceInfluenceField;
     textField -edit -text "" brTransferWeightsDestinationInfluenceField;
     brTransferWeightsContext -edit -sourceInfluence -1 -destinationInfluence -1 `currentCtx`;
+
+    $gTransferWeightsMesh = "";
 }
 
 
@@ -428,6 +466,8 @@ global proc brTransferWeightsClear()
 //
 global proc brTransferWeightsListInfluences( string $skin, int $newMesh )
 {
+    global string $gTransferWeightsSearchString;
+    global string $gTransferWeightsInfluenceSelection[];
     global string $gTransferWeightsJoints[];
 
     int $refresh = 1;
@@ -472,6 +512,51 @@ global proc brTransferWeightsListInfluences( string $skin, int $newMesh )
             }
 
             brTransferWeightsAddInfluenceToList $infl $inflParent;
+        }
+
+        // Clear the last selection and search.
+        clearRecall;
+    }
+    // If the mesh hasn't changed since the last use of the tool try to
+    // recall the search and re-select the last selection.
+    else
+    {
+        if ($gTransferWeightsSearchString != "")
+        {
+            textFieldGrp -edit -text $gTransferWeightsSearchString brTransferWeightsSearchField;
+            evalDeferred("brTransferWeightsSearchJointString");
+        }
+
+        if (size($gTransferWeightsInfluenceSelection))
+        {
+            // Store the last selection. Because re-selecting the
+            // previous selection causes the selection command of the
+            // list to get triggered which overwrites the last
+            // selection. This way a previous multi-selection turns into
+            // a single selection because items are re-selected one
+            // after another. If then the new selection is re-selected
+            // the next time there is only one item in the list.
+            string $temp[] = $gTransferWeightsInfluenceSelection;
+
+            // Scroll the list to the second item of the previous
+            // selection.
+            if (`treeView -query -itemExists $temp[1] brTransferWeightsJointTree`)
+                treeView -edit -showItem $temp[1] brTransferWeightsJointTree;
+
+            // Re-select all items.
+            for ($item in $temp)
+            {
+                if (`treeView -query -itemExists $item brTransferWeightsJointTree`)
+                    treeView -edit -selectItem $item 1 brTransferWeightsJointTree;
+            }
+
+            // Save the previous selection.
+            $gTransferWeightsInfluenceSelection = $temp;
+
+            textField -edit -text $temp[0] brTransferWeightsSourceInfluenceField;
+            textField -edit -text $temp[1] brTransferWeightsDestinationInfluenceField;
+
+            brTransferWeightsSetTransferIndices;
         }
     }
 }

@@ -6,3 +6,6 @@ plug-ins: plug-ins/win64/2017
 
 + MAYAVERSION:2018 brSmoothWeights any C:\Users\USERNAME\Documents\maya\modules\brSmoothWeights
 plug-ins: plug-ins/win64/2018
+
++ MAYAVERSION:2019 brSmoothWeights any C:\Users\USERNAME\Documents\maya\modules\brSmoothWeights
+plug-ins: plug-ins/win64/2019

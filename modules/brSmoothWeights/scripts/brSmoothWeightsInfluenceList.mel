@@ -13,6 +13,30 @@
 
 //
 // Procedure Name:
+//      clearRecall
+//
+// Description:
+//      Remove the optionVars which help to recall the last selection
+//      and search filter.
+//
+// Input Arguments:
+//      None
+//
+// Return Value:
+//      None
+//
+proc clearRecall()
+{
+    global string $gSmoothWeightsSearchString;
+    global string $gSmoothWeightsInfluenceSelection[];
+
+    $gSmoothWeightsSearchString = "";
+    $gSmoothWeightsInfluenceSelection = {};
+}
+
+
+//
+// Procedure Name:
 //      brSmoothWeightsSearchJointString
 //
 // Description:
@@ -28,6 +52,8 @@
 //
 global proc brSmoothWeightsSearchJointString()
 {
+    global string $gSmoothWeightsSearchString;
+
     string $query = `textFieldGrp -query -text brSmoothWeightsSearchField`;
     string $items[] = `treeView -query -children "" brSmoothWeightsJointTree`;
 
@@ -44,6 +70,8 @@ global proc brSmoothWeightsSearchJointString()
         }
         treeView -edit -itemVisible $i $state brSmoothWeightsJointTree;
     }
+
+    $gSmoothWeightsSearchString = $query;
 }
 
 
@@ -63,6 +91,8 @@ global proc brSmoothWeightsSearchJointString()
 //
 global proc brSmoothWeightsClearSearch()
 {
+    global string $gSmoothWeightsSearchString;
+
     string $items[] = `treeView -query -children "" brSmoothWeightsJointTree`;
 
     textFieldGrp -edit -text "" brSmoothWeightsSearchField;
@@ -72,12 +102,39 @@ global proc brSmoothWeightsClearSearch()
 
     for ($i in $items)
         treeView -edit -itemVisible $i 1 brSmoothWeightsJointTree;
+
+    $gSmoothWeightsSearchString = "";
 }
 
 
 // ---------------------------------------------------------------------
 // actions
 // ---------------------------------------------------------------------
+
+//
+// Procedure Name:
+//      brTransferWeightsSelectionChanged
+//
+// Description:
+//      Track the order of the influence selection in the list by
+//      matching the current and last selected influence with the names
+//      stored in the optionVars.
+//      Display the influence names in the source and destination
+//      fields.
+//
+// Input Arguments:
+//      None
+//
+// Return Value:
+//      None
+//
+global proc brSmoothWeightsSelectionChanged()
+{
+    global string $gSmoothWeightsInfluenceSelection[];
+
+    $gSmoothWeightsInfluenceSelection = `treeView -query -selectItem brSmoothWeightsJointTree`;
+}
+
 
 //
 // Procedure Name:
@@ -100,6 +157,9 @@ global proc brSmoothWeightsSelectAffectedVertices( string $item )
     select -cl;
     skinCluster -edit -selectInfluenceVerts $item $gSmoothWeightsSkinCluster;
     doMenuComponentSelection($gSmoothWeightsMesh, "vertex");
+
+    if (!size(`ls -selection`))
+        select -replace $gSmoothWeightsMesh;
 }
 
 
@@ -152,6 +212,9 @@ global proc brSmoothWeightsSelectAffectedVerticesFromMenu( int $add, int $remove
     eval $cmd;
 
     doMenuComponentSelection($gSmoothWeightsMesh, "vertex");
+
+    if (!size(`ls -selection`))
+        select -replace $gSmoothWeightsMesh;
 }
 
 
@@ -219,7 +282,7 @@ global proc brSmoothWeightsGetSelection()
     if (`nodeType $node[0]` == "transform")
     {
         string $shape[] = `listRelatives -shapes -noIntermediate -fullPath $node[0]`;
-        if (size($shape) == 0)
+        if (size($shape) == 0 || `nodeType $shape[0]` != "mesh")
         {
             brSmoothWeightsClear;
             return;
@@ -261,7 +324,10 @@ global proc brSmoothWeightsGetSelection()
 //
 global proc brSmoothWeightsClear()
 {
+    global string $gSmoothWeightsMesh;
+
     treeView -edit -removeAll brSmoothWeightsJointTree;
+    $gSmoothWeightsMesh = "";
 }
 
 
@@ -293,6 +359,8 @@ global proc brSmoothWeightsClear()
 //
 global proc brSmoothWeightsListInfluences( string $skin, int $newMesh )
 {
+    global string $gSmoothWeightsSearchString;
+    global string $gSmoothWeightsInfluenceSelection[];
     global string $gSmoothWeightsJoints[];
 
     int $refresh = 1;
@@ -337,6 +405,46 @@ global proc brSmoothWeightsListInfluences( string $skin, int $newMesh )
             }
 
             brSmoothWeightsAddInfluenceToList $infl $inflParent;
+        }
+
+        // Clear the last selection and search.
+        clearRecall;
+    }
+    // If the mesh hasn't changed since the last use of the tool try to
+    // recall the search and re-select the last selection.
+    else
+    {
+        if ($gSmoothWeightsSearchString != "")
+        {
+            textFieldGrp -edit -text $gSmoothWeightsSearchString brSmoothWeightsSearchField;
+            evalDeferred("brSmoothWeightsSearchJointString");
+        }
+
+        if (size($gSmoothWeightsInfluenceSelection))
+        {
+            // Store the last selection. Because re-selecting the
+            // previous selection causes the selection command of the
+            // list to get triggered which overwrites the last
+            // selection. This way a previous multi-selection turns into
+            // a single selection because items are re-selected one
+            // after another. If then the new selection is re-selected
+            // the next time there is only one item in the list.
+            string $temp[] = $gSmoothWeightsInfluenceSelection;
+
+            // Scroll the list to the first item of the previous
+            // selection.
+            if (`treeView -query -itemExists $temp[0] brSmoothWeightsJointTree`)
+                treeView -edit -showItem $temp[0] brSmoothWeightsJointTree;
+
+            // Re-select all items.
+            for ($item in $temp)
+            {
+                if (`treeView -query -itemExists $item brSmoothWeightsJointTree`)
+                    treeView -edit -selectItem $item 1 brSmoothWeightsJointTree;
+            }
+
+            // Save the previous selection.
+            $gSmoothWeightsInfluenceSelection = $temp;
         }
     }
 }
@@ -568,6 +676,7 @@ global proc brSmoothWeightsInfluenceList()
                      -attachButtonRight 0
                      -allowDragAndDrop 1
                      -allowReparenting 0
+                     -selectionChangedCommand brSmoothWeightsSelectionChanged
                      -itemDblClickCommand brSmoothWeightsSelectAffectedVertices
                      brSmoothWeightsJointTree;
 
