@@ -12,7 +12,9 @@
 #define __transferWeightsTool__transferWeightsTool__
 
 #include <iostream>
-#include <tbb/tbb.h>
+#include <vector>
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
 
 #include <maya/MArgDatabase.h>
 #include <maya/MArgList.h>
@@ -28,6 +30,7 @@
 #include <maya/MDagPathArray.h>
 #include <maya/MEvent.h>
 #include <maya/MFloatPointArray.h>
+#include <maya/MFnCamera.h>
 #include <maya/MFnMesh.h>
 #include <maya/MFnSingleIndexedComponent.h>
 #include <maya/MFnSkinCluster.h>
@@ -155,8 +158,6 @@ public:
     MStatus doDrag(MEvent &event);
     MStatus doRelease(MEvent &event);
 
-    void drawCircle(MPoint point, MMatrix mat, double radius);
-
     // VP2.0
     MStatus doPress(MEvent &event,
                     MHWRender::MUIDrawManager &drawManager,
@@ -183,6 +184,7 @@ public:
     MIntArray getInfluenceIndices(MObject skinCluster, MDagPathArray &dagPaths);
     std::vector<bool> getInfluenceLocks(MDagPathArray dagPaths);
     bool getClosestIndex(MEvent event, MIntArray &indices, MFloatArray &distances);
+    MStatus getCameraClip(double &nearClip, double &farClip, MMatrix &camMat);
 
     // transfer computation
     void resetTransferValues();
@@ -326,6 +328,8 @@ private:
     short startScreenX;
     short startScreenY;
 
+    double nearClip;            // The near clip value of the
+                                // camera.
     MPointArray surfacePoints;  // The cursor positions on the mesh in
                                 // world space.
     MVector worldVector;        // The view vector from the camera to

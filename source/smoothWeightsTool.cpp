@@ -10,8 +10,6 @@
 
 #include "smoothWeightsTool.h"
 
-const float DEGTORAD = 3.14159265359f / 180.0f;
-
 // Macro for the press/drag/release methods in case there is nothing
 // selected or the tool gets applied outside any geometry. If the actual
 // MStatus would get returned an error can get listed in terminal on
@@ -741,83 +739,10 @@ MStatus smoothWeightsContext::doDrag(MEvent &event)
     status = doDragCommon(event);
     CHECK_MSTATUS_AND_RETURN_SILENT(status);
 
-    // To draw a view oriented circle in 3d space get the model view
-    // matrix and reset the translation and scale. The points to draw
-    // are then multiplied by the inverse matrix
-    MMatrix viewMat;
-    view.modelViewMatrix(viewMat);
-    MTransformationMatrix transMat(viewMat);
-    transMat.setTranslation(MVector(), MSpace::kWorld);
-    const double scale[3] = {1.0, 1.0, 1.0};
-    transMat.setScale(scale, MSpace::kWorld);
-    viewMat = transMat.asMatrix();
-
-    view.beginXorDrawing(false, true, (float)lineWidthVal, M3dView::kStippleNone);
-
-    if (drawBrushVal || event.mouseButton() == MEvent::kMiddleMouse)
-    {
-        // Draw the circle in regular paint mode.
-        // The range circle doens't get drawn here to avoid visual
-        // clutter.
-        if (event.mouseButton() == MEvent::kLeftMouse)
-        {
-            drawCircle(surfacePoints[0], viewMat, sizeVal);
-        }
-        // Adjusting the brush settings with the middle mouse button.
-        else if (event.mouseButton() == MEvent::kMiddleMouse)
-        {
-            // When adjusting the size the circle needs to remain with
-            // a static position but the size needs to change.
-            if (sizeAdjust)
-            {
-                drawCircle(surfacePointAdjust, viewMat, adjustValue);
-                if (volumeVal && drawRangeVal)
-                    drawCircle(surfacePointAdjust, viewMat, adjustValue * rangeVal);
-            }
-            // When adjusting the strength the circle needs to remain
-            // fixed and only the strength indicator changes.
-            else
-            {
-                drawCircle(surfacePointAdjust, viewMat, sizeVal);
-                if (volumeVal && drawRangeVal)
-                    drawCircle(surfacePointAdjust, viewMat, sizeVal * rangeVal);
-
-                // Drawing the strength line is not properly working in
-                // this implementation. But since the legacy viewport
-                // isn't considered current anymore it remains
-                // unfinished.
-                /*
-                MPoint start(startScreenX, startScreenY);
-                MPoint end(startScreenX, startScreenY + adjustValue * 500);
-                glBegin(GL_LINES);
-                    glVertex2f((float)start.x, (float)start.y);
-                    glVertex2f((float)end.x, (float)end.y);
-                glEnd();
-                */
-            }
-        }
-    }
-    view.endXorDrawing();
+    // Don't draw anything because the legacy viewport uses OpenGL
+    // which is deprecated.
 
     return status;
-}
-
-
-void smoothWeightsContext::drawCircle(MPoint point, MMatrix mat, double radius)
-{
-    unsigned int i;
-
-    glBegin(GL_LINE_LOOP);
-    for (i = 0; i < 360; i +=2)
-    {
-        double degInRad = i * DEGTORAD;
-        MPoint circlePoint(cos(degInRad) * radius, sin(degInRad) * radius, 0.0);
-        circlePoint *= mat.inverse();
-        glVertex3f(float(point.x + circlePoint.x),
-                   float(point.y + circlePoint.y),
-                   float(point.z + circlePoint.z));
-    }
-    glEnd();
 }
 
 
@@ -870,7 +795,7 @@ MStatus smoothWeightsContext::doDrag(MEvent &event,
     if (drawBrushVal || event.mouseButton() == MEvent::kMiddleMouse)
     {
         // Draw the circle in regular paint mode.
-        // The range circle doens't get drawn here to avoid visual
+        // The range circle doesn't get drawn here to avoid visual
         // clutter.
         if (event.mouseButton() == MEvent::kLeftMouse)
         {
@@ -1133,7 +1058,7 @@ MStatus smoothWeightsContext::doDragCommon(MEvent event)
         unsigned int max = 1000;
         double baseValue = sizeVal;
         // The adjustment speed depends on the distance to the mesh.
-        // Closer distances allows for a feiner control whereas larger
+        // Closer distances allows for a finer control whereas larger
         // distances need a coarser control.
         double speed = pow(0.001 * pressDistance, 0.9);
 
@@ -1688,6 +1613,14 @@ bool smoothWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFl
     event.getPosition(screenX, screenY);
     view.viewToWorld(screenX, screenY, worldPoint, worldVector);
 
+    // Get the camera near clip and matrix because the world point of
+    // the current view is positioned on the near clip plane. As a
+    // result changing the near clipping of the camera influences any
+    // world point related operations such as surface distances.
+    double farClip;
+    MMatrix camMat;
+    getCameraClip(nearClip, farClip, camMat);
+
     // Note: MMeshIsectAccelParams is not used on purpose to speed up
     // the search for intersections. In particular cases (i.e. bend
     // elbow with rigid weighting to smooth) the acceleration sometimes
@@ -1743,10 +1676,16 @@ bool smoothWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFl
     if (volumeVal)
         numHits = 1;
 
-    // Store the closest distance to the mesh for the adjustment speed.
-    pressDistance = hitRayParams[0];
+    // Define the start depth value based on the tool settings and the
+    // number of hits.
+    unsigned int startIndex = (unsigned)depthStartVal - 1;
+    if (startIndex >= numHits)
+        startIndex = numHits - 1;
 
-    for (i = (unsigned)depthStartVal - 1; i < numHits; i ++)
+    // Store the closest distance to the mesh for the adjustment speed.
+    pressDistance = hitRayParams[startIndex] + nearClip;
+
+    for (i = startIndex; i < numHits; i ++)
     {
         surfacePoints.append(hitPoints[i]);
 
@@ -1790,6 +1729,39 @@ bool smoothWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, MFl
     }
 
     return true;
+}
+
+
+//
+// Description:
+//      Get the camera of the current 3dview.
+//
+// Input Arguments:
+//      nearClip            The near clip value of the current camera.
+//      farClip             The far clip value of the current camera.
+//      camMat              The inclusive MMatrix of the camera.
+//
+// Return Value:
+//      MStatus             kSuccess if the camera has been found.
+//
+MStatus smoothWeightsContext::getCameraClip(double &nearClip,
+                                            double &farClip,
+                                            MMatrix &camMat)
+{
+    MStatus status = MStatus::kSuccess;
+
+    MDagPath camDag;
+    status = view.getCamera(camDag);
+    CHECK_MSTATUS_AND_RETURN_IT(status);
+    MFnCamera camFn(camDag, &status);
+    CHECK_MSTATUS_AND_RETURN_IT(status);
+    MPlug nearClipPlug = camFn.findPlug("nearClipPlane", false);
+    nearClipPlug.getValue(nearClip);
+    MPlug farClipPlug = camFn.findPlug("farClipPlane", false);
+    farClipPlug.getValue(farClip);
+    camMat = camDag.inclusiveMatrix();
+
+    return status;
 }
 
 
@@ -2163,6 +2135,9 @@ void smoothWeightsContext::computeWeights(unsigned int index,
     unsigned int connectedCount = connected.length();
 
     double maxWeight = 0.0;
+    double maxWeightUnlocked = 0.0;
+    double maxWeightLocked = 0.0;
+    bool hasLocks = false;
 
     // Create a new array for the averaged weights for the max influence
     // process.
@@ -2184,10 +2159,6 @@ void smoothWeightsContext::computeWeights(unsigned int index,
         unsigned int w = influenceCount * index + i;
         currentValue = (currentWeights[w] / connectedCount) * (1 - scale);
 
-        bool unlocked = true;
-        if (influenceLocks[i] && !ignoreLockVal)
-            unlocked = false;
-
         // Collect the weights per influence.
         // When in volume mode it's possible that the volume range is
         // too small and no vertices are found. In this case there are
@@ -2195,7 +2166,7 @@ void smoothWeightsContext::computeWeights(unsigned int index,
         // smoothedWeights array is initialized with 0 values the
         // current weights have to get transferred to smoothedWeights
         // or the vertex will have no weights at all.
-        if (connectedCount && unlocked)
+        if (connectedCount && !isLocked(i))
         {
             for (j = 0; j < connectedCount; j ++)
             {
@@ -2209,7 +2180,9 @@ void smoothWeightsContext::computeWeights(unsigned int index,
             }
         }
         else
+        {
             weight = currentWeights[w];
+        }
 
         smoothedWeights.set(weight, k);
         setCurrentWeight(weight, w, flood);
@@ -2218,6 +2191,13 @@ void smoothWeightsContext::computeWeights(unsigned int index,
         inflIndices.set((int)i, i);
 
         maxWeight += weight;
+        if (isLocked(i))
+        {
+            maxWeightLocked += weight;
+            hasLocks = true;
+        }
+        else
+            maxWeightUnlocked += weight;
     }
 
     // -----------------------------------------------------------------
@@ -2237,6 +2217,8 @@ void smoothWeightsContext::computeWeights(unsigned int index,
                 maxLimitIndex = 0;
 
             maxWeight = 0.0;
+            maxWeightUnlocked = 0.0;
+            maxWeightLocked = 0.0;
 
             for (i = 0; i < influenceCount; i ++)
             {
@@ -2245,7 +2227,9 @@ void smoothWeightsContext::computeWeights(unsigned int index,
                 unsigned int k = influenceCount * element + sortedIndex;
                 unsigned int w = influenceCount * index + sortedIndex;
 
-                if (i < maxLimitIndex)
+                // Discard any influence which is located at the
+                // beginning of the list and is not locked.
+                if (i < maxLimitIndex && !isLocked(sortedIndex))
                 {
                     smoothedWeights.set(0.0, k);
                     setCurrentWeight(0.0, w, flood);
@@ -2256,6 +2240,17 @@ void smoothWeightsContext::computeWeights(unsigned int index,
                     smoothedWeights.set(weight, k);
                     setCurrentWeight(weight, w, flood);
                     maxWeight += weight;
+
+                    // If the influence is locked the maxLimitIndex
+                    // needs to be raised to account for any influences
+                    // which are locked but are outside the index range.
+                    if (isLocked(sortedIndex))
+                    {
+                        maxLimitIndex += 1;
+                        maxWeightLocked += weight;
+                    }
+                    else
+                        maxWeightUnlocked += weight;
                 }
             }
         }
@@ -2270,7 +2265,29 @@ void smoothWeightsContext::computeWeights(unsigned int index,
             {
                 unsigned int k = influenceCount * element + i;
                 unsigned int w = influenceCount * index + i;
-                double value = smoothedWeights[k] / maxWeight;
+
+                double value = 0.0;
+                // In case there aren't any locked influences the
+                // normalization can consider all weights.
+                if (!hasLocks)
+                    value = smoothedWeights[k] / maxWeight;
+                // If one or more influences are locked keep the weights
+                // of the locked and calculate a scaling factor for the
+                // unlocked based on the unlocked weight sum and the
+                // remaining weight range.
+                else
+                {
+                    value = smoothedWeights[k];
+                    double remainingWeight = 1 - maxWeightLocked;
+                    if (!isLocked(i))
+                    {
+                        if (remainingWeight > 0)
+                            value *= remainingWeight / maxWeightUnlocked;
+                        else
+                            value = 0.0;
+                    }
+                }
+
                 smoothedWeights.set(value, k);
                 setCurrentWeight(value, w, flood);
             }
@@ -2296,6 +2313,25 @@ void smoothWeightsContext::computeWeights(unsigned int index,
             }
         }
     }
+}
+
+
+//
+// Description:
+//      Return of the influence with the given index is locked. The
+//      setting for ignoring locks is taken into account.
+//
+// Input Arguments:
+//      index               The influence index.
+//
+// Return Value:
+//      bool                The locked state of the influence.
+//
+bool smoothWeightsContext::isLocked(unsigned int index)
+{
+    if (influenceLocks[index] && !ignoreLockVal)
+        return true;
+    return false;
 }
 
 
@@ -2972,7 +3008,7 @@ bool smoothWeightsContext::onBoundary(int index)
 //      point               The position of the source boundary index.
 //      faces               The list of faces which are connected to the
 //                          source vertex.
-//      edges               The list of conneced edges to the source
+//      edges               The list of connected edges to the source
 //                          vertex which are needed to calculate an
 //                          average edge length.
 //      index               The index of the opposite vertex.

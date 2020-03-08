@@ -10,8 +10,6 @@
 
 #include "transferWeightsTool.h"
 
-const float DEGTORAD = 3.14159265359f / 180.0f;
-
 // Macro for the press/drag/release methods in case there is nothing
 // selected or the tool gets applied outside any geometry. If the actual
 // MStatus would get returned an error can get listed in terminal on
@@ -19,7 +17,7 @@ const float DEGTORAD = 3.14159265359f / 180.0f;
 // kSuccess is returned just for the sake of being invisible.
 #define CHECK_MSTATUS_AND_RETURN_SILENT(status) \
 if (status != MStatus::kSuccess)                \
-	return MStatus::kSuccess;                   \
+    return MStatus::kSuccess;                   \
 
 
 // ---------------------------------------------------------------------
@@ -723,79 +721,10 @@ MStatus transferWeightsContext::doDrag(MEvent &event)
     status = doDragCommon(event);
     CHECK_MSTATUS_AND_RETURN_SILENT(status);
 
-    // To draw a view oriented circle in 3d space get the model view
-    // matrix and reset the translation and scale. The points to draw
-    // are then multiplied by the inverse matrix
-    MMatrix viewMat;
-    view.modelViewMatrix(viewMat);
-    MTransformationMatrix transMat(viewMat);
-    transMat.setTranslation(MVector(), MSpace::kWorld);
-    const double scale[3] = {1.0, 1.0, 1.0};
-    transMat.setScale(scale, MSpace::kWorld);
-    viewMat = transMat.asMatrix();
-
-    view.beginXorDrawing(false, true, (float)lineWidthVal, M3dView::kStippleNone);
-
-    if (drawBrushVal || event.mouseButton() == MEvent::kMiddleMouse)
-    {
-        // Draw the circle in regular paint mode.
-        // The range circle doens't get drawn here to avoid visual
-        // clutter.
-        if (event.mouseButton() == MEvent::kLeftMouse)
-        {
-            drawCircle(surfacePoints[0], viewMat, sizeVal);
-        }
-        // Adjusting the brush settings with the middle mouse button.
-        else if (event.mouseButton() == MEvent::kMiddleMouse)
-        {
-            // When adjusting the size the circle needs to remain with
-            // a static position but the size needs to change.
-            if (sizeAdjust)
-            {
-                drawCircle(surfacePointAdjust, viewMat, adjustValue);
-            }
-            // When adjusting the strength the circle needs to remain
-            // fixed and only the strength indicator changes.
-            else
-            {
-                drawCircle(surfacePointAdjust, viewMat, sizeVal);
-
-                // Drawing the strength line is not properly working in
-                // this implementation. But since the legacy viewport
-                // isn't considered current anymore it remains
-                // unfinished.
-                /*
-                MPoint start(startScreenX, startScreenY);
-                MPoint end(startScreenX, startScreenY + adjustValue * 500);
-                glBegin(GL_LINES);
-                    glVertex2f((float)start.x, (float)start.y);
-                    glVertex2f((float)end.x, (float)end.y);
-                glEnd();
-                */
-            }
-        }
-    }
-    view.endXorDrawing();
+    // Don't draw anything because the legacy viewport uses OpenGL
+    // which is deprecated.
 
     return status;
-}
-
-
-void transferWeightsContext::drawCircle(MPoint point, MMatrix mat, double radius)
-{
-    unsigned int i;
-
-    glBegin(GL_LINE_LOOP);
-    for (i = 0; i < 360; i +=2)
-    {
-        double degInRad = i * DEGTORAD;
-        MPoint circlePoint(cos(degInRad) * radius, sin(degInRad) * radius, 0.0);
-        circlePoint *= mat.inverse();
-        glVertex3f(float(point.x + circlePoint.x),
-                   float(point.y + circlePoint.y),
-                   float(point.z + circlePoint.z));
-    }
-    glEnd();
 }
 
 
@@ -1656,6 +1585,14 @@ bool transferWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, M
     event.getPosition(screenX, screenY);
     view.viewToWorld(screenX, screenY, worldPoint, worldVector);
 
+    // Get the camera near clip and matrix because the world point of
+    // the current view is positioned on the near clip plane. As a
+    // result changing the near clipping of the camera influences any
+    // world point related operations such as surface distances.
+    double farClip;
+    MMatrix camMat;
+    getCameraClip(nearClip, farClip, camMat);
+
     // Note: MMeshIsectAccelParams is not used on purpose to speed up
     // the search for intersections. In particular cases (i.e. bend
     // elbow with rigid weighting) the acceleration sometimes failed to
@@ -1711,10 +1648,16 @@ bool transferWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, M
     if (volumeVal)
         numHits = 1;
 
-    // Store the closest distance to the mesh for the adjustment speed.
-    pressDistance = hitRayParams[0];
+    // Define the start depth value based on the tool settings and the
+    // number of hits.
+    unsigned int startIndex = (unsigned)depthStartVal - 1;
+    if (startIndex >= numHits)
+        startIndex = numHits - 1;
 
-    for (i = (unsigned)depthStartVal - 1; i < numHits; i ++)
+    // Store the closest distance to the mesh for the adjustment speed.
+    pressDistance = hitRayParams[startIndex] + nearClip;
+
+    for (i = startIndex; i < numHits; i ++)
     {
         surfacePoints.append(hitPoints[i]);
 
@@ -1758,6 +1701,39 @@ bool transferWeightsContext::getClosestIndex(MEvent event, MIntArray &indices, M
     }
 
     return true;
+}
+
+
+//
+// Description:
+//      Get the camera of the current 3dview.
+//
+// Input Arguments:
+//      nearClip            The near clip value of the current camera.
+//      farClip             The far clip value of the current camera.
+//      camMat              The inclusive MMatrix of the camera.
+//
+// Return Value:
+//      MStatus             kSuccess if the camera has been found.
+//
+MStatus transferWeightsContext::getCameraClip(double &nearClip,
+                                              double &farClip,
+                                              MMatrix &camMat)
+{
+    MStatus status = MStatus::kSuccess;
+
+    MDagPath camDag;
+    status = view.getCamera(camDag);
+    CHECK_MSTATUS_AND_RETURN_IT(status);
+    MFnCamera camFn(camDag, &status);
+    CHECK_MSTATUS_AND_RETURN_IT(status);
+    MPlug nearClipPlug = camFn.findPlug("nearClipPlane", false);
+    nearClipPlug.getValue(nearClip);
+    MPlug farClipPlug = camFn.findPlug("farClipPlane", false);
+    farClipPlug.getValue(farClip);
+    camMat = camDag.inclusiveMatrix();
+
+    return status;
 }
 
 
