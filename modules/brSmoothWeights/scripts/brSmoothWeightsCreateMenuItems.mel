@@ -16,23 +16,16 @@ global proc brSmoothWeightsDeleteMenuItems()
 }
 
 
-proc int mayaVersion()
-{
-    int $version = `about -apiVersion` / 100.0;
-    if ($version > 10000)
-        $version = $version / 100;
-    return $version;
-}
-
-
 global proc brSmoothWeightsAddMenuCommand()
 {
     global string $gRigSkinningMenu;
 
-    if (`menu -ex $gRigSkinningMenu`)
-        menu -edit
-             -postMenuCommand "brSmoothWeightsCreateMenuItems"
-             $gRigSkinningMenu;
+    if (`menu -exists $gRigSkinningMenu`)
+    {
+        string $cmd = `menu -query -postMenuCommand $gRigSkinningMenu`;
+        $cmd += "; brSmoothWeightsCreateMenuItems";
+        menu -edit -postMenuCommand $cmd $gRigSkinningMenu;
+    }
 
     source dagMenuProc;
 }
@@ -75,25 +68,14 @@ global proc brSmoothWeightsCreateMenuItems()
     if (!`pluginInfo -query -loaded brSmoothWeights`)
         loadPlugin brSmoothWeights;
 
-    int $version = `mayaVersion`;
-    string $menu = $gRigSkinningMenu;
+    if (!`menu -query -numberOfItems $gRigSkinningMenu`)
+        ChaSkinningMenu $gRigSkinningMenu;
 
-    if (!`menu -query -numberOfItems $menu`)
-        ChaSkinningMenu $menu;
-
-    setParent -menu $menu;
-    string $div = "";
-    if ($version >= 2015)
-        $div = "-dividerLabel \"Smooth Skin Weights\" ";
+    setParent -menu $gRigSkinningMenu;
+    string $div = "-dividerLabel \"Smooth Skin Weights\" ";
     eval("menuItem -divider 1 " + $div + "brSmoothWeightsMenuDivider");
 
     addMenuItems;
-
-    // Replace the command attached to the menu with the Maya default
-    // command to update the menu content.
-    menu -edit
-         -postMenuCommand ("ChaSkinningMenu " + $menu)
-         $menu;
 }
 
 // ---------------------------------------------------------------------
