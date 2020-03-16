@@ -65,6 +65,9 @@ global proc brSmoothWeightsCreateMenuItems()
 {
     global string $gRigSkinningMenu;
 
+    if (`menuItem -query -exists brSmoothWeightsMenuDivider`)
+        return;
+
     if (!`pluginInfo -query -loaded brSmoothWeights`)
         loadPlugin brSmoothWeights;
 
