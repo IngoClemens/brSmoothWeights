@@ -1,3 +1,6 @@
+**1.2.0 (2021-03-29)**
+* Added support for Maya 2022.
+
 **1.2.0 (2020-03-07)**
 * Added support for Maya 2020.
 * Removed support for the legacy viewport. The brush circle doesn't display.

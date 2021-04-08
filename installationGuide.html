@@ -1,0 +1,319 @@
+<!--suppress Annotator -->
+<html lang="en">
+    <head>
+        <title>Installation Guide</title>
+        <meta charset="utf-8">
+
+        <style type="text/css">
+            @import url("https://fonts.googleapis.com/css?family=Lato:400,700&display=swap");
+
+            body {
+                font-family: Lato, sans-serif;
+            }
+            a, a:link, a:hover, a:visited, a:active {
+                text-decoration: none;
+                color: #000;
+            }
+            a.dimmed, a:link.dimmed, a:hover.dimmed, a:visited.dimmed, a:active.dimmed {
+                color: #888;
+            }
+            .bodyFrame {
+                margin: 20px;
+                line-height: 1.5;
+            }
+            h1.headline {
+                font-size: 34px;
+            }
+            .subline {
+                font-size: 16px;
+                margin-top: -20px;
+                margin-bottom: 20px;
+            }
+            h1.topic {
+                font-size: 28px;
+                margin-top: 70px;
+            }
+            h2.subtopic {
+                font-size: 22px;
+                margin-top: 40px;
+            }
+            h2.topicTitle {
+                font-size: 18px;
+                margin-top: 40px;
+            }
+            .largeSeparator, .topicSeparator, .subtopicSeparator {
+                background: #aaa;
+                border: 0;
+                height: 2px;
+                margin: auto;
+                margin-top: 10px;
+                margin-bottom: 30px;
+            }
+            .numberSpace {
+                margin-left: 10px;
+                margin-right: 10px;
+            }
+            .topicSeparator {
+                background: #ccc;
+                height: 1px;
+            }
+            .subtopicSeparator {
+                background: #ccc;
+                height: 1px;
+            }
+            .listing li {
+                margin-top: 8px;
+                margin-left: 20px;
+            }
+            li.main {
+                font-weight: bold;
+                font-size: 18px;
+                margin-bottom: 12px;
+                margin-left: 20px;
+            }
+            li:last-child {
+                margin-bottom: 20px;
+            }
+            .installNote {
+                font-style: italic;
+                color: #888;
+                padding-top: 5px;
+                padding-bottom: 5px;
+            }
+            .noteBox {
+                background-color: #ddd;
+                padding: 12px 12px 12px 12px;
+                border-radius: 5px;
+                font-style: italic;
+            }
+            .code {
+                font-family: monospace;
+                font-style: normal;
+                padding: 10px 20px 10px 20px;
+            }
+            ul.square{
+                list-style-type: square;
+            }
+            .disclaimer {
+                font-size: 12px;
+            }
+            .copyright {
+                font-size: 11px;
+            }
+            .topSpace {
+                margin-top: 15px;
+            }
+
+        </style>
+    </head>
+
+    <body>
+        <div class="bodyFrame">
+
+            <div>
+                <h1 class="headline">Installation Guide</h1>
+                <hr class="largeSeparator">
+            </div>
+
+            <!-- Contents -->
+
+            <div class="listing">
+                <h2 class="">Contents</h2>
+                <ol>
+                    <li class="main"><a href="#install_overview">Overview</a></li>
+                    <li class="main"><a href="#installation">Installation</a>
+                        <ol>
+                            <li><a href="#installation_general">General Installation</a></li>
+                            <li><a href="#installation_custom">Custom Install</a></li>
+                            <li><a href="#create_module_file">Create Module File</a></li>
+                            <li><a href="#installation_manual">Manual Installation</a></li>
+                        </ol>
+                    </li>
+                    <li class="main"><a href="#licensing">Licensing</a></li>
+                    <li class="main"><a href="#uninstall">Uninstall</a></li>
+                    <li class="main"><a href="#troubleshooting">Troubleshooting</a>
+                        <ol>
+                            <li><a href="#troubleshooting_installError">Install Error</a></li>
+                            <li><a href="#troubleshooting_noPlugin">No Plug-in Available</a></li>
+                            <li><a href="#troubleshooting_contact">Contact</a></li>
+                        </ol>
+                    </li>
+                </ol>
+            </div>
+
+            <!-- Overview -->
+
+            <div id="install_overview">
+                <h1 class="topic">1.<span class="numberSpace" />Overview</h1>
+                <hr class="topicSeparator">
+            </div>
+            <p>The plug-in installs as a multi-version module. All supported versions of Maya will be served from the same installation.
+Version independent plug-ins and scripts are usually located on the top level folder of the user preferences in a default installation of Maya, whereas version specific plug-ins and scripts are located within the respective subfolder of each Maya version.</p>
+
+            <!-- Installation -->
+
+            <div id="installation">
+                <h1 class="topic">2.<span class="numberSpace" />Installation</h1>
+                <hr class="topicSeparator">
+            </div>
+            <p>This drag and drop installer copies all extracted files from the downloaded archive to the specified location of the Maya preferences.</p>
+
+            <div id="installation_general" />
+            <h2 class="subtopic">2.1<span class="numberSpace" />General Installation</h2>
+            <hr class="subtopicSeparator">
+            <div class="listing">
+                <ol>
+                    <li>Extract the files from the downloaded archive.
+                        <div class="installNote">Make sure that the downloaded archive is extracted before installing.</div></li>
+                    <li>Drag and drop the file <b>dragDropInstaller.py</b> from the folder of the extracted files into the main Maya window.
+                        <div class="installNote">The installer cannot perform correctly when directly dragged out of the archive into the Maya window.</div></li>
+                    <li>The installation window displays the End User License Agreement (EULA). Confirm the EULA to continue.
+                        <div class="installNote">The installation will be cancelled when the EULA is declined.</div></li>
+                    <li>The installer displays the options to define the installation paths. If you don't have specific requirements you can leave the paths unchanged.
+                        <div class="installNote">By default the files will install to the modules folder at the top level of the user preferences.<br>In case of an existing installation this previous path will be used.</div>
+                        <ul class="square">
+                            <li>If you need to define a custom path see <a href="#installation_custom"><b>Custom Install</b></a>.</li>
+                            <li>If you only want to create the module file see <a href="#create_module_file"><b>Create Module File</b></a>.</li>
+                        </ul></li>
+                    <li>Press the <b>Install</b> button to perform the installation.
+                        <div class="installNote">At the bottom of the window the installation progress is shown.<br>The progress is also saved to the installation log file where the installer is located.</div></li>
+                    <li>When finished, restart Maya.
+                        <div class="installNote">The installed files can only be found by Maya upon restart.<br>If you choose to restart later the installed files cannot be used until Maya gets restarted.</div></li>
+                    <li>The plug-in is available through it's menu item/s.</li>
+                </ol>
+            </div>
+
+            <!-- Custom install -->
+
+            <div id="installation_custom" />
+            <h2 class="subtopic">2.2<span class="numberSpace" />Custom Install</h2>
+            <hr class="subtopicSeparator">
+            In case user defined paths are required for the installation you can set these directly from the installation window.
+
+            <h2 class="topicTitle">Install Path</h2>
+            <p>This is the path where the module files will be copied to.</p>
+            <p>The default path is the modules folder on the top level of the Maya user preferences but any folder location can be chosen.</p>
+            <div class="noteBox">
+            The default Maya preferences don't contain a modules folder at the top level of the user preferences even though it's in the default module search paths of Maya.
+            </div>
+
+
+            <h2 class="topicTitle">Module Path</h2>
+            <p>This is the path where the module file (.mod) will be created in. The module file contains the path where the actual files of the installation can be found.</p>
+            <p>This path needs to be a registered Maya modules path. If a path is chosen which is not included in the Maya module path locations (defined by the MAYA_MODULE_PATH environment variable) the module is not found and the tool won’t be available.</p>
+            <div class="noteBox">
+            The registered Maya modules paths can be found by querying the MAYA_MODULE_PATH environment variable.<br>Use the following MEL command in Maya to get a list of all known paths.<br>
+            <div class="code">getenv MAYA_MODULE_PATH</div>
+            </div>
+
+            <!-- Create module file -->
+
+            <div id="create_module_file" />
+            <h2 class="subtopic">2.3<span class="numberSpace" />Create Module File</h2>
+            <hr class="subtopicSeparator">
+            <p>Creating a module file is only meant for user defined installations. No files are being copied during the process and no files are created in a location where they can be found by Maya.</p>
+            <p>The module file contains the path defined by the <b>Install Path</b> field in the installer window.</p>
+            <p>The module file for the plug-in gets created in the same folder where the installer is located.</p>
+            <p>Press <b>Create .mod file only</b> at the bottom of the installer window to create the file.</p>
+
+            <!-- Manual installation -->
+
+            <div id="installation_manual" />
+            <h2 class="subtopic">2.4<span class="numberSpace" />Manual Installation</h2>
+            <hr class="subtopicSeparator">
+            <p>In environments where the drag and drop installer is not applicable a manual installation is necessary.<br>The procedure requires to copy the module to the expected location and create a module file which directs Maya to the module contents.</p>
+
+            <h2 class="topicTitle">Step 1: Copy Module</h2>
+            <ol>
+                <li>The module folder, which contains all necessary files, is found in the <i>modules</i> folder of the extracted archive.
+                    <div class="code">PATH_TO_EXTRACTED_FILES/PLUG_IN_NAME/modules</div></li>
+                <li>Copy the contained folder of the <i>modules</i> folder to any location of your choice.</li>
+            </ol>
+
+            <h2 class="topicTitle">Step 2: Create Module File</h2>
+            <p>In order for Maya to find the files copied in <b>Step 1: Copy Module</b> a module file needs to be created which tells Maya where the contents of the plug-in are located.<br>This module file has the file extension .mod and should be placed in one of the module path locations Maya processes upon startup.</p>
+            <div class="noteBox">
+            The registered Maya modules paths can be found by querying the MAYA_MODULE_PATH environment variable.<br>Use the following MEL command in Maya to get a list of all known paths.<br>
+            <div class="code">getenv MAYA_MODULE_PATH</div></div>
+            <ol>
+                <li>Find the template module file <i>PATH_TO_EXTRACTED_FILES/PLUG_IN_NAME/resources/module_template.mod</i>.</li>
+                <li>Rename the file to the match the name of the module.</li>
+                <li>Open the file in a text editor of your choice.
+                    <div class="installNote">The module file contains definitions for each platform and supported version of Maya.<br>You can safely remove any definitions which don't match your platform and installed version/s of Maya, though this is not required.</div></li>
+                <li>Replace <i>MODULE_NAME</i> with the name of the module you are currently creating.</li>
+                <li>Replace <i>PATH_TO_MODULE_CONTENT</i> with the path you copied the contents of the modules to in <b>Step 1: Copy Modules</b>.
+                    <div class="installNote">It is important that the path ends with the folder which matches the name of the module. Example:</div>
+                    <div class="code">/USERNAME/Documents/maya/modules/PLUG_IN_NAME</div></li>
+                <li>Repeat the above steps 4 and 5 for each installed version of Maya.</li>
+                <li>Save the file to one of the Maya module paths which are stored in the MAYA_MODULE_PATH environment variable.</li>
+            </ol>
+
+            <p>After starting Maya the plug-in should be available through it's menu item/s.</p>
+            <p>If a plug-in installed through a module is not available the issue is usually path related.<br>Review all above steps to copy, modify and create files and check again by restarting Maya.</p>In case you need further assistance please contact us by emailing to <a href="mailto:mail@braverabbit.com">mail@braverabbit.com</a>.
+
+            <!-- Uninstall -->
+
+            <div id="uninstall">
+                <h1 class="topic">4.<span class="numberSpace" />Uninstall</h1>
+                <hr class="topicSeparator">
+            </div>
+            <p>To uninstall simply run the installer again and choose <b>Uninstall</b> at the bottom of the installer window.</p>
+
+            <!-- Troubleshooting -->
+
+            <div id="troubleshooting">
+                <h1 class="topic">5.<span class="numberSpace" />Troubleshooting</h1>
+                <hr class="topicSeparator">
+            </div>
+            <p>In case you experience issues during the installation please take a look at the log file which has been generated and is located in the same folder as the installer.</p>
+            <p>The installation log is a text file which contains all relevant information about the installation process.</p>
+
+            <div id="troubleshooting_installError" />
+            <h2 class="subtopic">5.1<span class="numberSpace" />Install Error</h2>
+            <p> It's possible that the installation fails because of file permissions, existing files or folders or similar reasons.<br>In this case try to uninstall the existing installation first and then install again.</p>
+            <ol class="listing">
+                <li>Run the installer by dragging the file <b>dragDropInstaller.py</b> from the folder of the extracted files into the main Maya window.</li>
+                <li>Confirm the EULA. (if shown)</li>
+                <li>Choose <b>Uninstall</b> at the bottom of the installer window.</li>
+                <li>Again, drag the installer into the main Maya window.</li>
+                <li>Perform the installation.</li>
+            </ol>
+
+            <div id="troubleshooting_noPlugin" />
+            <h2 class="subtopic">5.2<span class="numberSpace" />No Plug-in Available</h2>
+            <p>If the plug-in is not available in Maya it’s usually related to a wrong path setup.</p>
+            <p>Please always check:
+                <ul class="listing">
+                    <li>That the name of your user folder is correct. The default installation path is the modules folder on the top level of the user maya preferences.
+                    <div class="noteBox topSpace"><b>Find your Maya user preferences:</b>
+                    <p>The basic installation path is your Maya user preferences modules directory located at (depending on your platform):</p>
+                    <ul>
+                        <li><b>Windows:</b> C:\Users\USERNAME\Documents\maya\modules</li>
+                        <li><b>macOS:</b> /Users/USERNAME/Library/Preferences/Autodesk/maya/modules</li>
+                        <li><b>Linux:</b> /home/USERNAME/maya/modules</li>
+                    </ul>
+                    </div>
+                    <p>The default Maya preferences don't contain a modules folder</p></li>
+                    <li>That the module files (.mod) are placed in one of the module path locations of the MAYA_MODULE_PATH environment variable.<br>If the path is not known to Maya the module cannot be found.</li>
+                    <li>That no files from a previous installation are conflicting with the new installation.<br>Even though the installer tries to find any previously installed files there is no guarantee that all obsolete files have been removed.<br>Open the Plug-in Manager from <b>Maya Menu > Windows > Settings/Preferences > Plug-in Manager</b> and check for any plug-in related to the one you are installing. The path of each plug-in shows the location of the files.<br>Manually remove those files and try to install again.</li>
+                </ul>
+            </p>
+
+            <div id="troubleshooting_contact" />
+            <h2 class="subtopic">5.3<span class="numberSpace" />Contact</h2>
+            <p>If the issue persists and the plug-in doesn’t install properly or doesn’t show up in Maya please contact us with the installation log and details about the issue by emailing to <a href="mailto:mail@braverabbit.com">mail@braverabbit.com</a>.</p>
+
+            <!-- Disclaimer -->
+            <div style="margin-top: 80px;"></div>
+            <hr class="largeSeparator">
+            <div class="disclaimer">
+                <p>THE SOFTWARE PRODUCT IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD-PARTY RIGHTS. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE PRODUCT IS WITH YOU.</p>
+                <p>NEITHER BRAVE RABBIT NOR ITS SUPPLIERS WARRANT THAT THE FUNCTIONS CONTAINED IN THE SOFTWARE PRODUCT WILL MEET YOUR REQUIREMENTS OR THAT THE OPERATION OF THE SOFTWARE PRODUCT WILL BE UNINTERRUPTED OR ERROR-FREE. BRAVE RABBIT IS NOT OBLIGATED TO PROVIDE ANY UPDATES TO THE SOFTWARE.</p>
+                <p>IN NO EVENT SHALL THE AUTHOR OF THIS SOFTWARE PRODUCT BE LIABLE FOR ANY SPECIAL, CONSEQUENTIAL, INCIDENTAL, DIRECT OR INDIRECT DAMAGES WHATSOEVER (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS INTERRUPTION, FOR PERSONAL INJURY, LOSS OF BUSINESS INFORMATION, OR ANY OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF OR INABILITY TO USE THIS PRODUCT, EVEN IF THE AUTHOR OF THIS SOFTWARE PRODUCT IS AWARE OF THE POSSIBILITY OF SUCH DAMAGES AND KNOWN DEFECTS, ANY CLAIM BY A THIRD PARTY AND EVEN IF THE REMEDY FAILS OF ITS ESSENTIAL PURPOSE.</p>
+            </div>
+            <div class="copyright">
+                Maya&reg; is a registered trademark of Autodesk Inc. in the United States and/or other countries worldwide.<br>Mac OS&reg; is a registered trademark of Apple Inc.<br>Microsoft&reg; and Windows&reg; are either registered trademarks or trademarks of Microsoft Corporation in the United States and/or other countries.
+            </div>
+        </div>
+    </body>
+</html>

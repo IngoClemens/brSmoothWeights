@@ -4,7 +4,7 @@
 //  smoothWeightsTool
 //
 //  Created by ingo on 11/18/18.
-//  Copyright (c) 2018 Ingo Clemens. All rights reserved.
+//  Copyright (c) 2021 Ingo Clemens. All rights reserved.
 //
 // ---------------------------------------------------------------------
 
@@ -3804,7 +3804,7 @@ MStatus smoothWeightsContextCmd::doQueryFlags()
 // ---------------------------------------------------------------------
 // MIT License
 //
-// Copyright (c) 2018 Ingo Clemens, brave rabbit
+// Copyright (c) 2021 Ingo Clemens, brave rabbit
 // brSmoothWeights is under the terms of the MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining

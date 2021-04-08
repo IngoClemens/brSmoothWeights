@@ -1,5 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=moduleInstall_linux
-Terminal=true
-Exec=/bin/bash -c 'cd "$(dirname "$0")"; sudo ./install_macOS.command' %k
