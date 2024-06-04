@@ -33,6 +33,11 @@ plug-ins: plug-ins/linux64/2024
 [r] icons: icons
 [r] scripts: scripts
 
++ MAYAVERSION:2025 PLATFORM:linux MODULE_NAME any PATH_TO_MODULE_CONTENT
+plug-ins: plug-ins/linux64/2025
+[r] icons: icons
+[r] scripts: scripts
+
 
 
 
@@ -71,6 +76,11 @@ plug-ins: plug-ins/macOS/2024
 [r] icons: icons
 [r] scripts: scripts
 
++ MAYAVERSION:2025 PLATFORM:mac MODULE_NAME any PATH_TO_MODULE_CONTENT
+plug-ins: plug-ins/macOS/2025
+[r] icons: icons
+[r] scripts: scripts
+
 
 
 
@@ -106,5 +116,10 @@ plug-ins: plug-ins/win64/2023
 
 + MAYAVERSION:2024 PLATFORM:win64 MODULE_NAME any PATH_TO_MODULE_CONTENT
 plug-ins: plug-ins/win64/2024
+[r] icons: icons
+[r] scripts: scripts
+
++ MAYAVERSION:2025 PLATFORM:win64 MODULE_NAME any PATH_TO_MODULE_CONTENT
+plug-ins: plug-ins/win64/2025
 [r] icons: icons
 [r] scripts: scripts
