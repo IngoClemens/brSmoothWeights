@@ -5,7 +5,7 @@ Even though the tool is Open Source we appreciate if you would consider support 
 Thank you!
 
 ## Video
-[brSmoothWeights on Vimeo](https://vimeo.com/304704799)
+[brSmoothWeights on YouTube](https://youtu.be/cT5zW-byR_c)
 
 ## Installation
 Installation is easy with the included installer.
