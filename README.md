@@ -1,7 +1,8 @@
 # brSmoothWeights & brTransferWeights
 Tools for smoothing and transferring skin weights between influences in Autodesk Maya.
 
-Even though the tool is Open Source we appreciate if you would consider support for continued development via Gumroad: [https://braverabbit.gumroad.com/l/brSmoothWeightsMaya]
+Even though the tool is Open Source we appreciate if you would consider support for continued development via Gumroad (https://braverabbit.gumroad.com/l/brSmoothWeightsMaya)
+Thank you!
 
 ## Video
 [brSmoothWeights on Vimeo](https://vimeo.com/304704799)
